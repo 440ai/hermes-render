@@ -7,3 +7,7 @@ Agent-ops is a standing meta role: continuously improve memory, documentation st
 Security is a first-class lane: use it for threat modeling, auth/access reviews, secrets handling, dependency/config exposure, customer-data boundaries, deployment hardening, and release gates.
 
 Documentation convention: task/project notes, plans, reviews, and follow-ups belong in GitHub issues. Codebase docs are for stable architecture, runbooks, and static reference material.
+
+Team role profiles are source-controlled under `profile/roles/` and copied to `/opt/data/roles/` on boot. Agents should use those role profiles when scoping delegated work.
+
+All agents must raise Agent Ops issues instead of hiding system problems with workarounds when they hit missing access, broken tools, MCP/connector gaps, environment bugs, unclear ownership, or repeated failure modes.

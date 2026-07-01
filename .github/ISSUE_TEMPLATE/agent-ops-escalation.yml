@@ -1,0 +1,61 @@
+name: Agent Ops escalation
+description: Missing access, broken tool, MCP/connector gap, environment bug, or agent-system improvement.
+title: "[agent-ops] "
+labels: []
+body:
+  - type: textarea
+    id: needed-outcome
+    attributes:
+      label: Needed outcome
+      description: What the agent or user was trying to accomplish.
+    validations:
+      required: true
+  - type: textarea
+    id: blocked-role-task
+    attributes:
+      label: Role/task blocked
+      description: Which role or workstream was blocked.
+    validations:
+      required: true
+  - type: textarea
+    id: what-failed
+    attributes:
+      label: What failed
+      description: The missing access, broken tool, unclear convention, or environment bug.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: Commands, logs, tool responses, links, or screenshots. Redact secrets.
+    validations:
+      required: true
+  - type: textarea
+    id: impact
+    attributes:
+      label: Impact
+      description: What work is blocked or degraded.
+    validations:
+      required: true
+  - type: textarea
+    id: proper-fix
+    attributes:
+      label: Proper fix
+      description: The capability, access, workflow, profile rule, or tool change needed.
+    validations:
+      required: true
+  - type: textarea
+    id: workaround-avoided
+    attributes:
+      label: Workaround avoided
+      description: What tempting workaround should not become the system behavior.
+    validations:
+      required: false
+  - type: textarea
+    id: owner-next-step
+    attributes:
+      label: Owner / next step
+      description: Who or what should unblock this next.
+    validations:
+      required: true

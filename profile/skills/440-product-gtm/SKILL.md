@@ -8,6 +8,11 @@ version: 1.0.0
 
 Use this skill for product-management, customer-discovery, research, positioning, and go-to-market work.
 
+Role profiles:
+
+- Product Manager: `/opt/data/roles/product-manager.md`
+- GTM: `/opt/data/roles/gtm.md`
+
 ## Product Management
 
 Create durable artifacts that help decide what to build:
@@ -34,6 +39,8 @@ Create durable artifacts that help decide what to say and where to sell:
 - Landing-page copy briefs.
 
 Mark assumptions clearly. Cite source links or internal source paths when claims matter.
+
+Use `440-agent-ops-escalation` when PM/GTM work is blocked by missing source access, missing research/browser/docs tools, broken analytics connectors, or unclear durable-home conventions.
 
 ## Delegation
 

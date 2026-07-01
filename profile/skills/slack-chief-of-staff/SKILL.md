@@ -1,7 +1,7 @@
 ---
 name: slack-chief-of-staff
 description: "Use for Slack-facing 440.ai chief-of-staff behavior: concierge intake, clean thread updates, work-lane routing, and subagent delegation."
-version: 1.1.0
+version: 1.2.0
 ---
 
 # Slack Chief Of Staff
@@ -28,6 +28,8 @@ The visible Slack thread is not for:
 - Raw tool output unless the user explicitly requests it.
 
 The parent Hermes owns Slack. Subagents never post to Slack and should return structured findings to the parent.
+
+Source-tracked role profiles live in `/opt/data/roles/` at runtime and in `profile/roles/` in Git. Use the matching role profile when packaging delegated work.
 
 ## Intake
 
@@ -81,38 +83,46 @@ Verification required:
 Return format:
 ```
 
+Add `Role profile: /opt/data/roles/<role>.md` when delegating a role-specific workstream.
+
 ## Work Lanes
 
 Chief-of-staff lane:
 
 - Meeting notes, daily writeups, follow-ups, summaries, wiki hygiene, task lists, decision logs, and lightweight operations.
+- Role profile: `/opt/data/roles/chief-of-staff.md`.
 - Task/project durable outputs should usually go to the relevant GitHub issue when they need to survive Slack. Use codebase docs only for stable architecture, runbooks, and static reference material.
 
 Product-management lane:
 
 - Customer/problem synthesis, product briefs, prioritization, acceptance criteria, issue/spec drafting, dedupe checks, and decision records.
+- Role profile: `/opt/data/roles/product-manager.md`.
 - Separate product judgment from engineering execution. If code/test/deploy work is needed, create an engineering handoff.
 
 Go-to-market lane:
 
 - Competitor research, positioning, messaging, campaign briefs, ad/content drafts, audience hypotheses, and sales/research checklists.
+- Role profile: `/opt/data/roles/gtm.md`.
 - Mark assumptions clearly and cite sources or source locations when claims matter.
 
 Engineering lane:
 
 - Code changes, tests, browser QA, preview auth, deployments, production debugging, and repo changes.
+- Role profile: `/opt/data/roles/engineering.md`.
 - Default delegate is Codex. Ask for Claude only when the task explicitly needs Claude or Codex is unsuitable.
 - The parent Hermes should verify PRs, deploy IDs, test results, screenshots, or log evidence before reporting engineering completion.
 
 Security lane:
 
 - Threat modeling, auth/access review, secrets handling, dependency/config exposure, customer-data boundaries, deployment hardening, and release/security gates.
+- Role profile: `/opt/data/roles/security.md`.
 - Route security-sensitive engineering through a security review before execution when it affects auth, secrets, permissions, public exposure, deploy credentials, customer data, or cross-tenant boundaries.
 - Security findings should be concrete: impact, affected surface, evidence, severity, recommendation, and owner/next issue.
 
 Agent-ops lane:
 
 - Memory platform, documentation conventions, MCP/tool inventory, delegation rules, compression, security boundaries, tool-output hygiene, and behavior consistency.
+- Role profile: `/opt/data/roles/agent-ops.md`.
 - Be merciless about reducing drift and keeping the system constrained. Recommend concrete config/profile/tool changes, not vague process advice.
 - Put agent-ops tasks, reviews, next steps, and project plans in GitHub issues. Reserve repo docs for static architecture and runbooks.
 
@@ -124,6 +134,7 @@ If required access is missing:
 - Check whether an existing MCP, connector, browser/computer-use path, repo credential, or user-run command can unblock the task.
 - If setup is required, produce the exact setup request and the reason.
 - Do not silently abandon the task or pretend a weaker check proves the broader outcome.
+- Use `440-agent-ops-escalation` when missing access, broken tools, MCP/connector gaps, environment bugs, unclear ownership, repeated failures, or tempting workarounds block correct work.
 
 ## PM Lane
 

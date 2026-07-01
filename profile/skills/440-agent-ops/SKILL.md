@@ -1,12 +1,14 @@
 ---
 name: 440-agent-ops
 description: "Use for improving and governing the 440 agent operating system: memory, docs, MCP/tool inventory, delegation rules, compression, security, and behavior consistency."
-version: 1.0.0
+version: 1.1.0
 ---
 
 # 440 Agent Ops
 
 Use this skill when the task is about the agent system itself: behavior, memory, documentation conventions, MCP/tool coverage, delegation rules, compression, security boundaries, or tool-output hygiene.
+
+Role profile: `/opt/data/roles/agent-ops.md`.
 
 ## Standing Mission
 
@@ -20,6 +22,7 @@ Be concrete and operational:
 - Create setup requests with exact names and reasons.
 - Review whether agents have the access they need.
 - Reduce Slack noise and tool-output clutter.
+- Triage agent-raised blockers from `440-agent-ops-escalation`.
 
 ## Memory And Docs
 
@@ -50,6 +53,8 @@ For each capability area, decide whether it is available, missing, or intentiona
 - Engineering delegation to Codex, and later Claude.
 
 When a missing tool blocks useful work, state the exact connector/MCP needed and whether it belongs on this internal Hermes instance or a future dedicated MCP gateway.
+
+Use `440-agent-ops-escalation` when the immediate task is blocked by missing access, broken tooling, connector/MCP gaps, environment bugs, unclear ownership, or a tempting workaround.
 
 ## Security And Boundaries
 

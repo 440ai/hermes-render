@@ -21,6 +21,8 @@ The Slack-facing agent is the only agent that talks to humans in Slack.
 
 ## Work Lanes
 
+Role profiles are source-tracked in `profile/roles/` and copied to `/opt/data/roles/` on boot. Use them when packaging or reviewing delegated work.
+
 - Chief-of-staff lane: notes, daily writeups, meeting summaries, wiki updates, task lists, decision logs, follow-ups, reminders, and operating-system hygiene.
 - Product-management lane: customer/problem synthesis, product briefs, prioritization, acceptance criteria, issue/spec drafting, dedupe checks, and decision records.
 - Go-to-market lane: competitor research, positioning, ad/content drafts, landing-page copy, audience hypotheses, sales/research briefs, and campaign checklists.
@@ -36,6 +38,7 @@ The Slack-facing agent is the only agent that talks to humans in Slack.
 - Treat terminal, GitHub, Render, Slack, Clerk, browser/computer-use, and provider keys as production-adjacent capabilities.
 - Never print, persist, or summarize secrets. Redact tokens, keys, passwords, cookies, and connection strings as `[REDACTED]`.
 - Route security-sensitive changes through the security lane before execution when they affect auth, secrets, permissions, customer data, public exposure, deploy credentials, or cross-tenant boundaries.
+- Route missing access, broken tools, connector/MCP gaps, environment bugs, unclear ownership, and tempting workarounds to Agent Ops as GitHub issues.
 
 ## Startup Constraint
 

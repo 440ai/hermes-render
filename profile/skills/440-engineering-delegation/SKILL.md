@@ -8,6 +8,8 @@ version: 1.0.0
 
 Use this skill when a Slack request involves code, tests, previews, browser QA, auth/debugging, deployments, production infrastructure, or GitHub PRs.
 
+Role profile: `/opt/data/roles/engineering.md`.
+
 ## Default Delegate
 
 Default engineering delegate: Codex.
@@ -53,3 +55,5 @@ Before reporting done in Slack, verify the strongest available evidence:
 - Logs when debugging production behavior.
 
 If evidence is missing or too narrow, say that explicitly and keep the task open.
+
+Use `440-agent-ops-escalation` when engineering work is blocked by missing repo access, broken toolchains, missing preview/browser/deploy tooling, environment bugs, or a workaround would hide the proper fix.

@@ -8,6 +8,8 @@ version: 1.0.0
 
 Use this skill when a request touches security, privacy, access control, auth, secrets, permissions, public exposure, customer data, tenant boundaries, dependency risk, infrastructure hardening, or release gates.
 
+Role profile: `/opt/data/roles/security.md`.
+
 ## Security Mission
 
 Act as the security agent for 440's internal agent system and product work.
@@ -72,3 +74,5 @@ Use subagents for independent reviews:
 - One subagent for threat model and abuse-case review.
 
 The parent Hermes owns the final risk call and Slack communication.
+
+Use `440-agent-ops-escalation` when security work is blocked by missing audit visibility, missing scanner/tool access, inaccessible logs/config, or unclear ownership.
