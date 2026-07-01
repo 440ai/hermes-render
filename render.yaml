@@ -239,4 +239,7 @@ services:
       - key: OAUTH2_PROXY_CLIENT_SECRET
         sync: false
       - key: OAUTH2_PROXY_COOKIE_SECRET
-        generateValue: true
+        # Must be exactly 16, 24, or 32 bytes for oauth2-proxy AES.
+        # Render generateValue creates a longer base64 value, so set this
+        # manually in Render with a 32-character random string.
+        sync: false
