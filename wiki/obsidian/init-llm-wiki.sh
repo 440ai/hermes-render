@@ -29,20 +29,21 @@ EOF
 
 setup_git_auth
 
+git_vault() {
+  git -c "safe.directory=$LLM_WIKI_VAULT_DIR" -C "$LLM_WIKI_VAULT_DIR" "$@"
+}
+
 if [[ ! -d "$LLM_WIKI_VAULT_DIR/.git" ]]; then
   rm -rf "$LLM_WIKI_VAULT_DIR"
-  if ! git clone --branch "$LLM_WIKI_REF" "$LLM_WIKI_REPO" "$LLM_WIKI_VAULT_DIR"; then
-    echo "[llm-wiki] warning: could not clone $LLM_WIKI_REPO into $LLM_WIKI_VAULT_DIR" >&2
-    mkdir -p "$LLM_WIKI_VAULT_DIR"
-  fi
+  git clone --branch "$LLM_WIKI_REF" "$LLM_WIKI_REPO" "$LLM_WIKI_VAULT_DIR"
 else
-  git -C "$LLM_WIKI_VAULT_DIR" fetch origin "$LLM_WIKI_REF" || true
-  git -C "$LLM_WIKI_VAULT_DIR" checkout "$LLM_WIKI_REF" || true
-  git -C "$LLM_WIKI_VAULT_DIR" pull --ff-only origin "$LLM_WIKI_REF" || true
+  git_vault fetch origin "$LLM_WIKI_REF"
+  git_vault checkout "$LLM_WIKI_REF"
+  git_vault pull --ff-only origin "$LLM_WIKI_REF"
 fi
 
 if [[ -d "$LLM_WIKI_VAULT_DIR/.git" ]]; then
-  git -C "$LLM_WIKI_VAULT_DIR" remote set-url origin "$LLM_WIKI_REPO" || true
+  git_vault remote set-url origin "$LLM_WIKI_REPO"
 fi
 
 chown -R abc:abc "$(dirname "$LLM_WIKI_VAULT_DIR")" 2>/dev/null || true
