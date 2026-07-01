@@ -1,6 +1,6 @@
 # yaml-language-server: $schema=https://render.com/schema/render.yaml.json
 #
-# Hermes Agent on Render, pre-baked with Render tools.
+# Internal 440.ai Hermes Agent on Render, pre-baked with Render tools.
 # https://github.com/NousResearch/hermes-agent
 #
 # Single web service built from the local Dockerfile, which extends the
@@ -10,8 +10,8 @@
 #     with the full MCP tool catalog available to the provided API key
 #
 # Inside the container the gateway runs in the foreground and the
-# dashboard runs as a background side-process (HERMES_DASHBOARD=1).
-# Render's public URL serves the dashboard on port 10000; persistent
+# dashboard runs as a supervised side-process (HERMES_DASHBOARD=1).
+# Render's public URL serves the authenticated dashboard on port 10000; persistent
 # state lives on a 5 GB disk mounted at /opt/data (HERMES_HOME default).
 #
 # To upgrade Hermes: bump HERMES_IMAGE in the Dockerfile and redeploy.
@@ -19,14 +19,13 @@
 
 services:
   - type: web
-    name: hermes
+    name: hermes-internal
     runtime: docker
     region: oregon
     plan: standard
     # Render builds the image from this repo's Dockerfile on every deploy.
-    # The Dockerfile FROMs the pinned upstream Hermes image, adds Render
-    # tooling + the skill bundle, and sets ENTRYPOINT to our bootstrap wrapper — so
-    # no `dockerCommand` override is needed here.
+    # The Dockerfile FROMs the pinned upstream Hermes image and adds Render
+    # tooling + the skill bundle. The upstream image keeps its s6 entrypoint.
     dockerfilePath: ./Dockerfile
     autoDeployTrigger: off
     healthCheckPath: /api/status
@@ -37,26 +36,33 @@ services:
       sizeGB: 5
 
     envVars:
-      # The Blueprint only carries vars that change how the container boots
-      # or that wire up the bundled Render tools. All provider keys, tool
-      # keys, and chat platform tokens are set through the Hermes dashboard
-      # (API Keys tab), which writes them to /opt/data/.env on the disk.
+      # The Blueprint carries vars that change how the container boots, wire
+      # auth, or supply service-level secrets. Runtime state still lives on
+      # the persistent /opt/data disk.
 
-      # Dashboard side-process. The entrypoint backgrounds `hermes dashboard`
-      # before exec'ing `gateway run` whenever HERMES_DASHBOARD is truthy.
-      # HERMES_DASHBOARD_HOST=0.0.0.0 makes the entrypoint pass --insecure
-      # so the dashboard accepts non-loopback binds.
+      # Dashboard side-process. The current upstream image refuses remote
+      # binds unless a dashboard auth provider is configured, or unless
+      # HERMES_DASHBOARD_INSECURE is explicitly enabled. Do not set insecure
+      # for this internal deployment.
       - key: HERMES_DASHBOARD
         value: "1"
       - key: HERMES_DASHBOARD_HOST
         value: "0.0.0.0"
       - key: HERMES_DASHBOARD_PORT
         value: "10000"
-      # Exposes a Chat tab in the dashboard that embeds the full Hermes TUI
-      # over a server-side PTY + xterm.js. This is how you chat with the
-      # agent without a real terminal on the host side.
-      - key: HERMES_DASHBOARD_TUI
-        value: "1"
+
+      # Clerk/OIDC dashboard auth. Configure the Clerk OAuth/OIDC app with:
+      #   https://ha.440.ai/auth/callback
+      - key: HERMES_DASHBOARD_PUBLIC_URL
+        value: https://ha.440.ai
+      - key: HERMES_DASHBOARD_OIDC_ISSUER
+        value: https://clerk.440.ai
+      - key: HERMES_DASHBOARD_OIDC_SCOPES
+        value: openid profile email
+      - key: HERMES_DASHBOARD_OIDC_CLIENT_ID
+        sync: false
+      - key: HERMES_DASHBOARD_OIDC_CLIENT_SECRET
+        sync: false
 
       # Generated once at first deploy. Reuse this value as API_SERVER_KEY
       # in the dashboard if you later opt into the OpenAI-compatible API
@@ -75,4 +81,25 @@ services:
       # `render` CLI. This is the same kind of Render API key; the Render
       # account role behind the key determines what the agent can do.
       - key: RENDER_MCP_API_KEY
+        sync: false
+
+      # Internal Slack gateway. Socket Mode requires both bot and app tokens.
+      - key: SLACK_BOT_TOKEN
+        sync: false
+      - key: SLACK_APP_TOKEN
+        sync: false
+      - key: SLACK_ALLOWED_USERS
+        sync: false
+      - key: SLACK_ALLOWED_CHANNELS
+        sync: false
+
+      # Optional model/provider and repo access secrets. These can also be
+      # managed later through the authenticated Hermes dashboard.
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GITHUB_TOKEN
         sync: false
