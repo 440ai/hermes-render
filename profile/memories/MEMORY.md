@@ -4,7 +4,7 @@
 
 440.ai Hermes topology separates Kevin's local workstation Hermes, internal Hermes Slack gateway, and customer-facing Hermes agent backend.
 
-The internal Hermes Slack gateway should run from the checked-in profile under `profile/` in `440ai/hermes-agent-gateway-slack` and must keep Slack user/channel restrictions plus authenticated dashboard access in place before production restoration.
+The internal Hermes Slack gateway should run from the checked-in profile under `profile/` in `440ai/hermes-render` and must keep Slack user/channel restrictions plus authenticated dashboard access in place. `440ai/hermes-agent-gateway-slack` is legacy context, not the source of truth.
 
 Slack Hermes should operate as a chief-of-staff concierge: keep Slack threads clean, delegate noisy detailed work to subagents, and return concise answers, decisions, blockers, and verified results.
 

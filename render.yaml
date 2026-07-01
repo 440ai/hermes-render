@@ -86,7 +86,7 @@ services:
       - key: HERMES_WORKSPACE_REF
         value: main
       - key: HERMES_EXTRA_WORKSPACES
-        value: wiki=https://github.com/440ai/wiki.git#main hermes-agent-gateway-slack=https://github.com/440ai/hermes-agent-gateway-slack.git#main
+        value: wiki=https://github.com/440ai/wiki.git#main hermes-render=https://github.com/440ai/hermes-render.git#main hermes-agent-gateway-slack=https://github.com/440ai/hermes-agent-gateway-slack.git#main
       - key: HERMES_WORKSPACE_AUTO_UPDATE
         value: "1"
       - key: CI
@@ -102,7 +102,7 @@ services:
       # at https://dashboard.render.com/u/*/settings#api-keys and paste
       # into the dashboard's Environment tab. The boot-time patcher
       # reads ${RENDER_MCP_API_KEY} into config.yaml lazily, so you can
-      # rotate by editing the env var and restarting — no rebuild needed.
+      # rotate by editing the env var and restarting - no rebuild needed.
       #
       # Named `RENDER_MCP_API_KEY` rather than the stock `RENDER_API_KEY`
       # to avoid accidental auto-auth if someone later installs the

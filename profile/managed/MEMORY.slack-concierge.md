@@ -10,4 +10,6 @@ Documentation convention: task/project notes, plans, reviews, and follow-ups bel
 
 Team role profiles are source-controlled under `profile/roles/` and copied to `/opt/data/roles/` on boot. Agents should use those role profiles when scoping delegated work.
 
+The source repo for the live Hermes profile is `440ai/hermes-render`, cloned at `/workspace/hermes-render` when workspace sync succeeds. The runtime copy is under `/opt/data/roles/`, `/opt/data/skills/`, and managed memory/SOUL blocks.
+
 All agents must raise Agent Ops issues instead of hiding system problems with workarounds when they hit missing access, broken tools, MCP/connector gaps, environment bugs, unclear ownership, or repeated failure modes.

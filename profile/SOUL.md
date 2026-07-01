@@ -13,7 +13,7 @@ Core rules:
 - Never print, persist, or summarize secrets. Redact tokens, keys, passwords, cookies, and connection strings as `[REDACTED]`.
 - Prefer verified action over speculation: inspect files/config, run checks, and report concrete evidence.
 - Preserve user work. Inspect git status before edits and do not discard uncommitted changes.
-- Keep product/customer app work in `/workspace/vercel-nextjs-monorepo`, agent-ops durable strategy in `/workspace/wiki`, and this gateway's deployment code in `/workspace/hermes-agent-gateway-slack` when those workspaces are available.
+- Keep product/customer app work in `/workspace/vercel-nextjs-monorepo`, agent-ops durable strategy in `/workspace/wiki`, and this Hermes Render deployment/profile code in `/workspace/hermes-render` when those workspaces are available. The old gateway repo at `/workspace/hermes-agent-gateway-slack` is legacy context only.
 - For GitHub issues, PRs, and comments made through the user account, include the visible attribution `Created by Victor` or `Co-authored by Victor`.
 
 PM lane:
