@@ -137,3 +137,106 @@ services:
         sync: false
       - key: GITHUB_TOKEN
         sync: false
+
+  # Actual Obsidian desktop-in-browser app for the LLM wiki.
+  #
+  # Keep the LinuxServer Obsidian container private. Its own docs warn that it
+  # has no auth by default and includes terminal/root-capable desktop access.
+  # Public traffic enters through llm-wiki-auth-proxy, which enforces OIDC.
+  - type: pserv
+    name: llm-wiki-obsidian
+    runtime: docker
+    region: oregon
+    plan: standard
+    dockerfilePath: ./wiki/obsidian/Dockerfile
+    dockerContext: ./wiki/obsidian
+    autoDeployTrigger: off
+
+    disk:
+      name: llm-wiki-obsidian-data
+      mountPath: /config
+      sizeGB: 10
+
+    envVars:
+      - key: PORT
+        value: "10000"
+      - key: CUSTOM_HTTPS_PORT
+        value: "10000"
+      - key: TITLE
+        value: 440 LLM Wiki
+      - key: PUID
+        value: "1000"
+      - key: PGID
+        value: "1000"
+      - key: TZ
+        value: America/New_York
+      - key: LLM_WIKI_REPO
+        value: https://github.com/440ai/llm-wiki.git
+      - key: LLM_WIKI_REF
+        value: main
+      - key: LLM_WIKI_VAULT_DIR
+        value: /config/vaults/llm-wiki
+      - key: HARDEN_DESKTOP
+        value: "true"
+      - key: DISABLE_SUDO
+        value: "true"
+      - key: DISABLE_TERMINALS
+        value: "true"
+      - key: START_DOCKER
+        value: "false"
+      - key: SELKIES_FILE_TRANSFERS
+        value: none
+      - key: GITHUB_TOKEN
+        sync: false
+
+  # Public entrypoint for the Obsidian UI. Configure the Clerk/OIDC app with:
+  # https://wiki.440.ai/oauth2/callback
+  - type: web
+    name: llm-wiki-auth-proxy
+    runtime: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./wiki/oauth2-proxy/Dockerfile
+    dockerContext: ./wiki/oauth2-proxy
+    autoDeployTrigger: off
+    healthCheckPath: /ping
+    domains:
+      - wiki.440.ai
+
+    envVars:
+      - key: OAUTH2_PROXY_HTTP_ADDRESS
+        value: 0.0.0.0:10000
+      - key: OAUTH2_PROXY_PROVIDER
+        value: oidc
+      - key: OAUTH2_PROXY_PROVIDER_DISPLAY_NAME
+        value: Clerk
+      - key: OAUTH2_PROXY_OIDC_ISSUER_URL
+        value: https://clerk.440.ai
+      - key: OAUTH2_PROXY_SCOPE
+        value: openid profile email
+      - key: OAUTH2_PROXY_REDIRECT_URL
+        value: https://wiki.440.ai/oauth2/callback
+      - key: OAUTH2_PROXY_UPSTREAMS
+        value: https://llm-wiki-obsidian:10000/
+      - key: OAUTH2_PROXY_SSL_UPSTREAM_INSECURE_SKIP_VERIFY
+        value: "true"
+      - key: OAUTH2_PROXY_REVERSE_PROXY
+        value: "true"
+      - key: OAUTH2_PROXY_PROXY_WEBSOCKETS
+        value: "true"
+      - key: OAUTH2_PROXY_COOKIE_SECURE
+        value: "true"
+      - key: OAUTH2_PROXY_COOKIE_SAMESITE
+        value: lax
+      - key: OAUTH2_PROXY_EMAIL_DOMAINS
+        value: "*"
+      - key: OAUTH2_PROXY_AUTHENTICATED_EMAILS_FILE
+        value: /etc/oauth2-proxy/allowed-emails.txt
+      - key: OAUTH2_PROXY_WHITELIST_DOMAINS
+        value: .440.ai
+      - key: OAUTH2_PROXY_CLIENT_ID
+        sync: false
+      - key: OAUTH2_PROXY_CLIENT_SECRET
+        sync: false
+      - key: OAUTH2_PROXY_COOKIE_SECRET
+        generateValue: true
