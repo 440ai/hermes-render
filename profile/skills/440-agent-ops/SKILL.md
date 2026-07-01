@@ -26,8 +26,9 @@ Be concrete and operational:
 Use three durable layers:
 
 - Hermes memory: stable user/team preferences and operating rules.
-- Wiki/docs: standards, decisions, playbooks, and strategy.
-- GitHub issues/PRs: executable work and reviewable changes.
+- GitHub issues: task/project notes, reviews, plans, follow-ups, and executable work.
+- Wiki/docs or repo docs: stable architecture, runbooks, standards, and static reference material.
+- PRs: reviewable code/config/profile changes.
 
 Do not store secrets in memory or docs.
 

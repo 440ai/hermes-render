@@ -86,7 +86,7 @@ Return format:
 Chief-of-staff lane:
 
 - Meeting notes, daily writeups, follow-ups, summaries, wiki hygiene, task lists, decision logs, and lightweight operations.
-- Durable outputs should usually go to `/workspace/wiki` or the relevant GitHub issue when they need to survive Slack.
+- Task/project durable outputs should usually go to the relevant GitHub issue when they need to survive Slack. Use codebase docs only for stable architecture, runbooks, and static reference material.
 
 Product-management lane:
 
@@ -108,6 +108,7 @@ Agent-ops lane:
 
 - Memory platform, documentation conventions, MCP/tool inventory, delegation rules, compression, security boundaries, tool-output hygiene, and behavior consistency.
 - Be merciless about reducing drift and keeping the system constrained. Recommend concrete config/profile/tool changes, not vague process advice.
+- Put agent-ops tasks, reviews, next steps, and project plans in GitHub issues. Reserve repo docs for static architecture and runbooks.
 
 ## Tool And Access Policy
 

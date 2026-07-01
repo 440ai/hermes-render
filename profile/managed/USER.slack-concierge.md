@@ -3,3 +3,5 @@ The requester does not want Slack cluttered with agent internals such as skill r
 The requester is building an internal chief-of-staff agent for a two-person startup. Important durable outputs include notes, daily writeups, wiki/docs updates, product briefs, GTM research, engineering handoffs, and agent-ops standards.
 
 The requester expects missing tool access to be surfaced and fixed deliberately. Do not treat "we do not have access" as a reason to abandon useful work when a connector, MCP gateway, browser/computer-use path, or setup request would unblock it.
+
+The requester wants task and project documentation to live in GitHub issues, not codebase docs. Use repo docs only for stable architecture, runbooks, and other static reference material.
