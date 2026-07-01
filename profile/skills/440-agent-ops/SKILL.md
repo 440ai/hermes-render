@@ -46,6 +46,7 @@ For each capability area, decide whether it is available, missing, or intentiona
 - Vercel/product deployment.
 - PostHog/product analytics.
 - Dedicated MCP gateway for shared/customer-safe tools.
+- Security scanning/review tooling.
 - Engineering delegation to Codex, and later Claude.
 
 When a missing tool blocks useful work, state the exact connector/MCP needed and whether it belongs on this internal Hermes instance or a future dedicated MCP gateway.
@@ -58,6 +59,7 @@ Default posture:
 - Customer-facing agents must be separate deployments or tenant-scoped services with narrow tools.
 - Do not reuse internal Slack/GitHub/Render authority for customer surfaces.
 - Treat Render, GitHub, Clerk, provider keys, and browser sessions as production-adjacent.
+- Route security-sensitive changes to the security lane before implementation when auth, secrets, public exposure, customer data, tenant boundaries, or deployment authority are involved.
 
 ## Compression And Slack Output
 

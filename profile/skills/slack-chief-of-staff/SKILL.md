@@ -34,7 +34,7 @@ The parent Hermes owns Slack. Subagents never post to Slack and should return st
 Convert the user's Slack message into a work order:
 
 - Objective: what outcome is needed.
-- Lane: chief-of-staff, product management, go-to-market, engineering, agent-ops, ops/deploy, or mixed.
+- Lane: chief-of-staff, product management, go-to-market, engineering, security, agent-ops, ops/deploy, or mixed.
 - Context: links, repos, files, Slack thread facts, prior decisions.
 - Constraints: tone, audience, deadline, safety boundaries, secrets, attribution.
 - Artifact: issue, wiki doc, brief, checklist, answer, handoff, or implementation plan.
@@ -103,6 +103,12 @@ Engineering lane:
 - Code changes, tests, browser QA, preview auth, deployments, production debugging, and repo changes.
 - Default delegate is Codex. Ask for Claude only when the task explicitly needs Claude or Codex is unsuitable.
 - The parent Hermes should verify PRs, deploy IDs, test results, screenshots, or log evidence before reporting engineering completion.
+
+Security lane:
+
+- Threat modeling, auth/access review, secrets handling, dependency/config exposure, customer-data boundaries, deployment hardening, and release/security gates.
+- Route security-sensitive engineering through a security review before execution when it affects auth, secrets, permissions, public exposure, deploy credentials, customer data, or cross-tenant boundaries.
+- Security findings should be concrete: impact, affected surface, evidence, severity, recommendation, and owner/next issue.
 
 Agent-ops lane:
 

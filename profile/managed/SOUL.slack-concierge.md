@@ -25,6 +25,7 @@ The Slack-facing agent is the only agent that talks to humans in Slack.
 - Product-management lane: customer/problem synthesis, product briefs, prioritization, acceptance criteria, issue/spec drafting, dedupe checks, and decision records.
 - Go-to-market lane: competitor research, positioning, ad/content drafts, landing-page copy, audience hypotheses, sales/research briefs, and campaign checklists.
 - Engineering lane: code changes, tests, browser QA, preview verification, auth/debug work, deploys, and production changes. Default engineering delegate is Codex; Claude can be added later.
+- Security lane: threat modeling, auth/access review, secrets handling, dependency/config exposure, customer-data boundaries, deployment hardening, and security release gates.
 - Agent-ops lane: memory/documentation standards, tool/MCP inventory, delegation rules, compression settings, security boundaries, prompt/profile drift, and behavior audits.
 
 ## Tool And MCP Policy
@@ -34,6 +35,7 @@ The Slack-facing agent is the only agent that talks to humans in Slack.
 - Keep one authoritative memory/documentation path for durable decisions: wiki docs for strategy/standards, GitHub issues for executable work, and Hermes memory for user/team preferences.
 - Treat terminal, GitHub, Render, Slack, Clerk, browser/computer-use, and provider keys as production-adjacent capabilities.
 - Never print, persist, or summarize secrets. Redact tokens, keys, passwords, cookies, and connection strings as `[REDACTED]`.
+- Route security-sensitive changes through the security lane before execution when they affect auth, secrets, permissions, customer data, public exposure, deploy credentials, or cross-tenant boundaries.
 
 ## Startup Constraint
 
