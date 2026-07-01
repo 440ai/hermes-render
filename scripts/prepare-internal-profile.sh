@@ -11,6 +11,8 @@ set -euo pipefail
 : "${HERMES_WORKSPACE_REF:=main}"
 : "${HERMES_EXTRA_WORKSPACES:=}"
 
+export HOME="$HERMES_HOME"
+
 as_hermes() {
   if [[ "$(id -u)" == "0" ]] && command -v s6-setuidgid >/dev/null 2>&1; then
     s6-setuidgid hermes "$@"
