@@ -70,8 +70,13 @@ RUN test -f /opt/hermes/plugins/dashboard_auth/allowlisted_oidc/plugin.yaml \
         /opt/render-tools/slack-backup-loop.sh \
         /etc/services.d/slack-backup/run
 
-# The Slack backup cron writes to Render Postgres through psycopg.
-RUN python3 -m pip install --no-cache-dir "psycopg[binary]==3.2.10"
+# The in-service Slack backup loop writes SQLite by default. If the base
+# Hermes venv can bootstrap pip, also install psycopg for optional Postgres use.
+RUN if /opt/hermes/.venv/bin/python -m ensurepip --upgrade; then \
+      /opt/hermes/.venv/bin/python -m pip install --no-cache-dir "psycopg[binary]==3.2.10"; \
+    else \
+      echo "psycopg not installed; SLACK_BACKUP_DATABASE_URL requires a Postgres-capable image"; \
+    fi
 
 # Pre-create the dir the patcher writes to so chown works cleanly on
 # first boot. The mounted disk replaces this empty dir at runtime;
