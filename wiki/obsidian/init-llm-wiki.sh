@@ -33,6 +33,35 @@ git_vault() {
   git -c "safe.directory=$LLM_WIKI_VAULT_DIR" -C "$LLM_WIKI_VAULT_DIR" "$@"
 }
 
+configure_obsidian_vault() {
+  local config_dir="${OBSIDIAN_CONFIG_DIR:-/config/.config/obsidian}"
+  local config_file="$config_dir/obsidian.json"
+  local ts
+
+  mkdir -p "$config_dir" "$LLM_WIKI_VAULT_DIR/.obsidian"
+
+  if [[ -f "$config_file" ]] && grep -Fq "$LLM_WIKI_VAULT_DIR" "$config_file"; then
+    return 0
+  fi
+
+  if [[ -f "$config_file" ]]; then
+    cp "$config_file" "${config_file}.bak.$(date +%s)"
+  fi
+
+  ts="$(date +%s)000"
+  cat >"$config_file" <<EOF
+{
+  "vaults": {
+    "llm-wiki": {
+      "path": "$LLM_WIKI_VAULT_DIR",
+      "ts": $ts,
+      "open": true
+    }
+  }
+}
+EOF
+}
+
 if [[ ! -d "$LLM_WIKI_VAULT_DIR/.git" ]]; then
   rm -rf "$LLM_WIKI_VAULT_DIR"
   git clone --branch "$LLM_WIKI_REF" "$LLM_WIKI_REPO" "$LLM_WIKI_VAULT_DIR"
@@ -46,5 +75,6 @@ if [[ -d "$LLM_WIKI_VAULT_DIR/.git" ]]; then
   git_vault remote set-url origin "$LLM_WIKI_REPO"
 fi
 
+configure_obsidian_vault
 chown -R abc:abc "$(dirname "$LLM_WIKI_VAULT_DIR")" 2>/dev/null || true
 echo "[llm-wiki] vault ready: $LLM_WIKI_VAULT_DIR"
