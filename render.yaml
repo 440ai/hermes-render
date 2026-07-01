@@ -138,6 +138,34 @@ services:
       - key: GITHUB_TOKEN
         sync: false
 
+  - type: cron
+    name: hermes-slack-backup
+    runtime: docker
+    region: oregon
+    plan: starter
+    dockerfilePath: ./Dockerfile
+    autoDeployTrigger: off
+    schedule: "*/15 * * * *"
+    dockerCommand: python3 /opt/render-tools/slack_backup_dump.py
+
+    envVars:
+      - key: SLACK_BOT_TOKEN
+        sync: false
+      - key: SLACK_BACKUP_DATABASE_URL
+        fromDatabase:
+          name: hermes-slack-archive
+          property: connectionString
+      - key: SLACK_BACKUP_CHANNEL_ALLOWLIST
+        sync: false
+      - key: SLACK_BACKUP_CHANNEL_TYPES
+        value: public_channel,private_channel
+      - key: SLACK_BACKUP_BACKFILL_DAYS
+        value: "90"
+      - key: SLACK_BACKUP_LOOKBACK_DAYS
+        value: "7"
+      - key: SLACK_BACKUP_INCLUDE_THREADS
+        value: "1"
+
   # Actual Obsidian desktop-in-browser app for the LLM wiki.
   #
   # Keep the LinuxServer Obsidian container private. Its own docs warn that it
@@ -245,3 +273,10 @@ services:
         # Render generateValue creates a longer base64 value, so set this
         # manually in Render with a 32-character random string.
         sync: false
+
+databases:
+  - name: hermes-slack-archive
+    databaseName: hermes_slack_archive
+    user: hermes_slack_archive
+    region: oregon
+    plan: basic-256mb
