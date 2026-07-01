@@ -189,8 +189,9 @@ services:
       - key: GITHUB_TOKEN
         sync: false
 
-  # Public entrypoint for the Obsidian UI. Configure the Clerk/OIDC app with:
-  # https://wiki.440.ai/oauth2/callback
+  # Public entrypoint for the Obsidian UI. Use the default Render URL while
+  # wiki.440.ai DNS is pending; switch back to the custom-domain callback after
+  # Render verifies the domain.
   - type: web
     name: llm-wiki-auth-proxy
     runtime: docker
@@ -215,7 +216,7 @@ services:
       - key: OAUTH2_PROXY_SCOPE
         value: openid profile email
       - key: OAUTH2_PROXY_REDIRECT_URL
-        value: https://wiki.440.ai/oauth2/callback
+        value: https://llm-wiki-auth-proxy.onrender.com/oauth2/callback
       - key: OAUTH2_PROXY_UPSTREAMS
         value: https://llm-wiki-obsidian:10000/
       - key: OAUTH2_PROXY_SSL_UPSTREAM_INSECURE_SKIP_VERIFY
