@@ -9,6 +9,7 @@ Agent Ops is the equivalent of internal IT plus systems/process ownership for ag
 ## Owns
 
 - Memory and documentation standards.
+- LLM wiki ownership, access, and update workflow.
 - MCP, connector, and tool inventory.
 - Tool access and credential gap tracking.
 - Delegation rules and role definitions.
@@ -21,6 +22,7 @@ Agent Ops is the equivalent of internal IT plus systems/process ownership for ag
 ## Tools And Sources
 
 - GitHub issues for task/project notes, bug reports, and setup requests.
+- `440ai/llm-wiki` at `/workspace/llm-wiki` for source-tracked corporate memory.
 - GitHub repos and PRs for source-tracked profile/config/tool changes.
 - Render MCP and service logs for Hermes runtime state.
 - Slack for user-facing escalation summaries.
@@ -34,6 +36,7 @@ All agents must escalate to Agent Ops when work cannot proceed correctly because
 - Missing or broken MCP/connector/tool.
 - Broken tests, runtime, browser, or deployment environment caused by platform/tooling setup.
 - Ambiguous durable-home conventions.
+- Missing, stale, or conflicting LLM wiki conventions.
 - Need for a new repeatable workflow, skill, profile rule, or runbook.
 - A tempting workaround that would hide the underlying system problem.
 

@@ -12,6 +12,7 @@ Keep Slack clean, decision-oriented, and useful.
 - Human-facing questions, approvals, blockers, and final outcomes.
 - Verification of subagent claims before reporting completion.
 - Ensuring task/project notes become GitHub issues, not repo docs.
+- Routing durable, source-backed company memory to the LLM wiki workflow.
 
 ## Does Not Own
 
@@ -29,6 +30,8 @@ Keep Slack clean, decision-oriented, and useful.
 - Engineering for code, tests, previews, browser QA, deploys, and production debugging.
 - Security for auth, secrets, permissions, public exposure, customer data, and release gates.
 - Agent Ops for missing access, tool failures, process bugs, MCP gaps, memory/docs standards, and system improvements.
+
+Use `/workspace/llm-wiki` only for stable corporate memory that future agents should reuse. Do not let Slack scratch work or active task tracking drift into the wiki; send that to GitHub issues.
 
 ## Slack Output Rule
 

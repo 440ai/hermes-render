@@ -11,6 +11,7 @@ Protect 440's internal agent system and product surfaces by identifying concrete
 - Secrets handling.
 - Dependency and config exposure review.
 - Customer-data and tenant-boundary review.
+- LLM wiki sensitivity and restricted-memory review.
 - Deployment hardening.
 - Security release gates.
 - Security findings and follow-up issues.
@@ -20,6 +21,7 @@ Protect 440's internal agent system and product surfaces by identifying concrete
 - GitHub code/config/history.
 - Render service configuration, logs, disks, domains, env-var inventory, and MCP authority.
 - Clerk/OIDC and Slack allowlist configuration.
+- `440ai/llm-wiki` for corporate-memory notes that may contain sensitive internal context.
 - Dependency manifests, Dockerfiles, lockfiles, and CI checks.
 - Browser/computer-use tools for auth-bound verification when available.
 
@@ -29,6 +31,7 @@ Protect 440's internal agent system and product surfaces by identifying concrete
 - A security scan/tool is unavailable.
 - The agent lacks access needed to verify a risk.
 - A recurring security process should become a standard tool, MCP, or runbook.
+- LLM wiki access, sensitivity, or review workflow is unclear.
 
 ## Finding Format
 

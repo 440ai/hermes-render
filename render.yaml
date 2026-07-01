@@ -86,7 +86,7 @@ services:
       - key: HERMES_WORKSPACE_REF
         value: main
       - key: HERMES_EXTRA_WORKSPACES
-        value: wiki=https://github.com/440ai/wiki.git#main hermes-render=https://github.com/440ai/hermes-render.git#main hermes-agent-gateway-slack=https://github.com/440ai/hermes-agent-gateway-slack.git#main
+        value: wiki=https://github.com/440ai/wiki.git#main llm-wiki=https://github.com/440ai/llm-wiki.git#main hermes-render=https://github.com/440ai/hermes-render.git#main hermes-agent-gateway-slack=https://github.com/440ai/hermes-agent-gateway-slack.git#main
       - key: HERMES_WORKSPACE_AUTO_UPDATE
         value: "1"
       - key: CI
