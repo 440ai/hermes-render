@@ -20,8 +20,8 @@ Adds two things the first time it runs against a given config.yaml:
        - /opt/render-tools/skills-upstream (pinned render-oss/skills)
      The local overlay is listed first so its skill names win on collision.
 
-  3. dashboard.oauth -- selects Hermes' self-hosted OIDC dashboard auth
-     provider by default. Runtime issuer/client/scopes are still supplied
+  3. dashboard.oauth -- selects 440.ai's allowlisted Clerk/OIDC dashboard auth
+     provider by default. Runtime client credentials are still supplied
      through Render environment variables so secrets stay out of config.yaml.
 
 The patcher is INSERT-only by design. If either key already exists
@@ -35,6 +35,7 @@ Uses PyYAML, which ships with Hermes' .venv.
 """
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 
@@ -48,12 +49,19 @@ RENDER_SKILL_DIRS = (
 )
 RENDER_MCP_URL = "https://mcp.render.com/mcp"
 RENDER_MCP_AUTH = "Bearer ${RENDER_MCP_API_KEY}"
+DEFAULT_ALLOWED_EMAILS = (
+    "hello@kevinwalsh.co",
+    "k@440.ai",
+    "scott@440.ai",
+    "sjtousley@gmail.com",
+)
 DEFAULT_DASHBOARD_OAUTH = {
-    "provider": "self-hosted",
-    "self_hosted": {
+    "provider": "allowlisted-oidc",
+    "allowlisted_oidc": {
         "issuer": "${HERMES_DASHBOARD_OIDC_ISSUER}",
-        "client_id": "${HERMES_DASHBOARD_OIDC_CLIENT_ID}",
-        "scopes": "${HERMES_DASHBOARD_OIDC_SCOPES}",
+        "client_id": "${HERMES_DASHBOARD_ALLOWLISTED_OIDC_CLIENT_ID}",
+        "scopes": "${HERMES_DASHBOARD_ALLOWLISTED_OIDC_SCOPES}",
+        "allowed_emails": list(DEFAULT_ALLOWED_EMAILS),
     },
 }
 
@@ -158,9 +166,19 @@ def ensure_dashboard_oauth(config: dict) -> bool:
     if "provider" not in oauth:
         oauth["provider"] = DEFAULT_DASHBOARD_OAUTH["provider"]
         changed = True
-    if "self_hosted" not in oauth:
-        oauth["self_hosted"] = DEFAULT_DASHBOARD_OAUTH["self_hosted"].copy()
+    if "allowlisted_oidc" not in oauth:
+        oauth["allowlisted_oidc"] = DEFAULT_DASHBOARD_OAUTH["allowlisted_oidc"].copy()
         changed = True
+    elif isinstance(oauth.get("allowlisted_oidc"), dict):
+        allowlisted = oauth["allowlisted_oidc"]
+        if "allowed_emails" not in allowlisted:
+            raw = os.environ.get("HERMES_DASHBOARD_ALLOWED_EMAILS", "")
+            allowlisted["allowed_emails"] = [
+                email.strip().lower()
+                for email in raw.replace("\n", ",").split(",")
+                if email.strip()
+            ] or list(DEFAULT_ALLOWED_EMAILS)
+            changed = True
     return changed
 
 

@@ -44,25 +44,53 @@ services:
       # binds unless a dashboard auth provider is configured, or unless
       # HERMES_DASHBOARD_INSECURE is explicitly enabled. Do not set insecure
       # for this internal deployment.
+      - key: HERMES_HOME
+        value: /opt/data
       - key: HERMES_DASHBOARD
+        value: "1"
+      - key: HERMES_ENABLE_DASHBOARD
         value: "1"
       - key: HERMES_DASHBOARD_HOST
         value: "0.0.0.0"
       - key: HERMES_DASHBOARD_PORT
         value: "10000"
+      - key: HERMES_OVERWRITE_CONFIG
+        value: "1"
+      - key: HERMES_OVERWRITE_PROFILE
+        value: "0"
+      - key: HERMES_ACCEPT_HOOKS
+        value: "1"
 
-      # Clerk/OIDC dashboard auth. Configure the Clerk OAuth/OIDC app with:
-      #   https://ha.440.ai/auth/callback
+      # Clerk/OIDC dashboard auth. The checked-in allowlisted-oidc provider
+      # wraps Clerk with an explicit Hermes-side email allowlist. Configure
+      # the Clerk OAuth app with: https://ha.440.ai/auth/callback
       - key: HERMES_DASHBOARD_PUBLIC_URL
         value: https://ha.440.ai
       - key: HERMES_DASHBOARD_OIDC_ISSUER
         value: https://clerk.440.ai
-      - key: HERMES_DASHBOARD_OIDC_SCOPES
-        value: openid profile email
-      - key: HERMES_DASHBOARD_OIDC_CLIENT_ID
+      - key: HERMES_DASHBOARD_ALLOWLISTED_OIDC_SCOPES
+        value: profile email
+      - key: HERMES_DASHBOARD_ALLOWLISTED_OIDC_CLIENT_ID
         sync: false
-      - key: HERMES_DASHBOARD_OIDC_CLIENT_SECRET
+      - key: HERMES_DASHBOARD_ALLOWLISTED_OIDC_CLIENT_SECRET
         sync: false
+      - key: HERMES_DASHBOARD_ALLOWED_EMAILS
+        value: hello@kevinwalsh.co,k@440.ai,scott@440.ai,sjtousley@gmail.com
+
+      # Workspaces cloned at boot so terminal/file tools operate across the
+      # same repos as the current internal Slack Hermes backend.
+      - key: HERMES_WORKSPACE_ROOT
+        value: /workspace
+      - key: HERMES_WORKSPACE_REPO
+        value: https://github.com/440ai/vercel-nextjs-monorepo.git
+      - key: HERMES_WORKSPACE_REF
+        value: main
+      - key: HERMES_EXTRA_WORKSPACES
+        value: wiki=https://github.com/440ai/wiki.git#main hermes-agent-gateway-slack=https://github.com/440ai/hermes-agent-gateway-slack.git#main
+      - key: HERMES_WORKSPACE_AUTO_UPDATE
+        value: "1"
+      - key: CI
+        value: "1"
 
       # Generated once at first deploy. Reuse this value as API_SERVER_KEY
       # in the dashboard if you later opt into the OpenAI-compatible API
@@ -92,9 +120,15 @@ services:
         sync: false
       - key: SLACK_ALLOWED_CHANNELS
         sync: false
+      - key: SLACK_HOME_CHANNEL
+        sync: false
+      - key: SLACK_HOME_CHANNEL_NAME
+        sync: false
 
       # Optional model/provider and repo access secrets. These can also be
       # managed later through the authenticated Hermes dashboard.
+      - key: HERMES_AUTH_JSON_B64
+        sync: false
       - key: OPENROUTER_API_KEY
         sync: false
       - key: ANTHROPIC_API_KEY

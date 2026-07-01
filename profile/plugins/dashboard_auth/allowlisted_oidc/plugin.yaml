@@ -1,0 +1,8 @@
+name: allowlisted-oidc
+version: 1.0.0
+description: "Dashboard auth provider for the 440.ai Hermes gateway: Clerk/OIDC plus an explicit email allowlist."
+author: 440.ai
+kind: backend
+requires_env:
+  - HERMES_DASHBOARD_ALLOWLISTED_OIDC_CLIENT_ID
+  - HERMES_DASHBOARD_ALLOWLISTED_OIDC_CLIENT_SECRET

@@ -1,0 +1,73 @@
+# Runtime config copied into $HERMES_HOME/config.yaml on container boot.
+# Secrets live in Render environment variables or an external secret manager.
+
+model:
+  # Temporary shared-provider choice. The Render worker receives the matching
+  # OAuth credential through HERMES_AUTH_JSON_B64 until this service is moved to
+  # a service-owned provider credential.
+  provider: openai-codex
+  default: gpt-5.5
+  base_url: https://chatgpt.com/backend-api/codex
+
+agent:
+  max_turns: 90
+  reasoning_effort: high
+  verbose: false
+
+delegation:
+  max_concurrent_children: 4
+  max_spawn_depth: 2
+  orchestrator_enabled: true
+  subagent_auto_approve: false
+
+plugins:
+  enabled:
+    - dashboard_auth/allowlisted_oidc
+
+terminal:
+  backend: local
+  cwd: /workspace
+  timeout: 300
+
+# In channels, each authorized Slack user gets an isolated Hermes session.
+group_sessions_per_user: true
+unauthorized_dm_behavior: pair
+stt_enabled: true
+
+# Keep Slack channel noise low for the internal dev-team bot and require both a
+# specific authorized user and a specific authorized channel at deploy time.
+slack:
+  require_mention: true
+  strict_mention: true
+  unauthorized_dm_behavior: pair
+
+platforms:
+  slack:
+    reply_to_mode: first
+    extra:
+      reply_in_thread: true
+      reply_broadcast: false
+
+# Public dashboard binds must be authenticated. The checked-in allowlisted OIDC
+# plugin wraps Clerk/OIDC with a Hermes-side email allowlist so existing Clerk
+# users outside Scott/requester cannot use this shared service even if they can
+# authenticate to the broader 440 Clerk instance.
+dashboard:
+  public_url: https://ha.440.ai
+  oauth:
+    provider: allowlisted-oidc
+    allowlisted_oidc:
+      issuer: https://clerk.440.ai
+      scopes: "profile email"
+      allowed_emails:
+        - hello@kevinwalsh.co
+        - k@440.ai
+        - scott@440.ai
+        - sjtousley@gmail.com
+
+display:
+  # Slack cannot cheaply edit every progress line; permanent tool-progress spam
+  # is noisy in channels. The gateway can still execute tools and return final
+  # output.
+  tool_progress: off
+  tool_progress_command: false

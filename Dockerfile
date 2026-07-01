@@ -43,16 +43,40 @@ RUN set -eu; \
 # overlays would shadow upstream entries.
 COPY --chown=hermes:hermes skills/ /opt/render-tools/skills-local/
 
+# Internal 440.ai Slack gateway profile. This is copied into the persistent
+# HERMES_HOME disk on boot by the Render cont-init hook. The custom dashboard
+# auth provider also needs to live in Hermes' runtime plugin path so the
+# dashboard can import it before user-managed plugins are loaded from disk.
+COPY --chown=hermes:hermes profile/ /opt/hermes-profile/
+COPY --chown=root:root profile/plugins/dashboard_auth/allowlisted_oidc/ /opt/hermes/plugins/dashboard_auth/allowlisted_oidc/
+COPY --chown=root:root config.yaml /opt/hermes-profile/config.yaml
+
 # Boot-time wrapper: patches /opt/data/config.yaml, then hands off to
 # the upstream Hermes s6 startup path. This runs after the upstream
 # config seeding hook and before dashboard/gateway services start.
 COPY --chown=root:root scripts/bootstrap.sh /etc/cont-init.d/016-render-tools
+COPY --chown=root:root scripts/00-internal-profile.sh /etc/cont-init.d/00-internal-profile
 COPY --chown=root:root scripts/patch-config.py /opt/render-tools/patch-config.py
-RUN chmod 0755 /etc/cont-init.d/016-render-tools /opt/render-tools/patch-config.py
+COPY --chown=root:root scripts/prepare-internal-profile.sh /opt/render-tools/prepare-internal-profile.sh
+RUN test -f /opt/hermes/plugins/dashboard_auth/allowlisted_oidc/plugin.yaml \
+    && chmod 0755 /etc/cont-init.d/00-internal-profile \
+        /etc/cont-init.d/016-render-tools \
+        /opt/render-tools/patch-config.py \
+        /opt/render-tools/prepare-internal-profile.sh
 
 # Pre-create the dir the patcher writes to so chown works cleanly on
 # first boot. The mounted disk replaces this empty dir at runtime;
 # baking it just keeps the image self-contained for any non-disk use.
-RUN install -d -o hermes -g hermes -m 0755 /opt/data
+RUN install -d -o hermes -g hermes -m 0755 /opt/data /workspace
 
-CMD ["gateway", "run"]
+ENV HERMES_HOME=/opt/data \
+    HERMES_PROFILE_SOURCE=/opt/hermes-profile \
+    HERMES_OVERWRITE_PROFILE=0 \
+    HERMES_OVERWRITE_CONFIG=1 \
+    HERMES_WORKSPACE_ROOT=/workspace \
+    HERMES_WORKSPACE_REPO=https://github.com/440ai/vercel-nextjs-monorepo.git \
+    HERMES_WORKSPACE_REF=main \
+    HERMES_WORKSPACE_AUTO_UPDATE=1
+
+WORKDIR /workspace
+CMD ["gateway", "run", "--accept-hooks"]

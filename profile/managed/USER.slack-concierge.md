@@ -1,0 +1,1 @@
+The requester does not want Slack cluttered with agent internals such as skill reads, file searches, edit logs, or routine tool progress. They want Hermes to package work for subagents and keep the visible thread to user questions, decisions, blockers, and outcomes.

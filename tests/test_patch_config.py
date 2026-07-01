@@ -33,9 +33,9 @@ class PatchConfigTests(unittest.TestCase):
         changed = patch_config.ensure_dashboard_oauth(config)
 
         self.assertTrue(changed)
-        self.assertEqual(config["dashboard"]["oauth"]["provider"], "self-hosted")
+        self.assertEqual(config["dashboard"]["oauth"]["provider"], "allowlisted-oidc")
         self.assertEqual(
-            config["dashboard"]["oauth"]["self_hosted"]["issuer"],
+            config["dashboard"]["oauth"]["allowlisted_oidc"]["issuer"],
             "${HERMES_DASHBOARD_OIDC_ISSUER}",
         )
 
@@ -47,17 +47,27 @@ class PatchConfigTests(unittest.TestCase):
 
         self.assertTrue(changed)
         self.assertEqual(config["dashboard"]["oauth"]["provider"], "basic")
-        self.assertIn("self_hosted", config["dashboard"]["oauth"])
+        self.assertIn("allowlisted_oidc", config["dashboard"]["oauth"])
 
-    def test_existing_self_hosted_dashboard_oauth_is_not_overwritten(self):
+    def test_existing_allowlisted_dashboard_oauth_is_not_overwritten(self):
         patch_config = load_patch_config()
-        config = {"dashboard": {"oauth": {"provider": "basic", "self_hosted": {"issuer": "custom"}}}}
+        config = {
+            "dashboard": {
+                "oauth": {
+                    "provider": "basic",
+                    "allowlisted_oidc": {"issuer": "custom", "allowed_emails": ["a@example.com"]},
+                }
+            }
+        }
 
         changed = patch_config.ensure_dashboard_oauth(config)
 
         self.assertFalse(changed)
         self.assertEqual(config["dashboard"]["oauth"]["provider"], "basic")
-        self.assertEqual(config["dashboard"]["oauth"]["self_hosted"], {"issuer": "custom"})
+        self.assertEqual(
+            config["dashboard"]["oauth"]["allowlisted_oidc"],
+            {"issuer": "custom", "allowed_emails": ["a@example.com"]},
+        )
 
     def test_partial_upstream_dashboard_oauth_is_augmented(self):
         patch_config = load_patch_config()
@@ -67,5 +77,5 @@ class PatchConfigTests(unittest.TestCase):
 
         self.assertTrue(changed)
         self.assertEqual(config["dashboard"]["oauth"]["client_id"], "")
-        self.assertEqual(config["dashboard"]["oauth"]["provider"], "self-hosted")
-        self.assertIn("self_hosted", config["dashboard"]["oauth"])
+        self.assertEqual(config["dashboard"]["oauth"]["provider"], "allowlisted-oidc")
+        self.assertIn("allowlisted_oidc", config["dashboard"]["oauth"])
