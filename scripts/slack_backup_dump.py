@@ -718,7 +718,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--backfill-days", type=int, default=int(os.environ.get("SLACK_BACKUP_BACKFILL_DAYS", str(DEFAULT_BACKFILL_DAYS))))
     parser.add_argument("--lookback-days", type=int, default=int(os.environ.get("SLACK_BACKUP_LOOKBACK_DAYS", str(DEFAULT_LOOKBACK_DAYS))))
     parser.add_argument("--full-backfill", action="store_true", default=parse_bool(os.environ.get("SLACK_BACKUP_FULL_BACKFILL")))
-    parser.add_argument("--include-threads", action="store_true", default=parse_bool(os.environ.get("SLACK_BACKUP_INCLUDE_THREADS"), help=argparse.SUPPRESS))
+    parser.add_argument(
+        "--include-threads",
+        action="store_true",
+        default=parse_bool(os.environ.get("SLACK_BACKUP_INCLUDE_THREADS"), default=True),
+    )
     parser.add_argument("--no-include-threads", dest="include_threads", action="store_false")
     return parser
 

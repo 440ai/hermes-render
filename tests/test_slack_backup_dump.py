@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.util
+import os
 import sqlite3
 import sys
 import tempfile
@@ -78,6 +79,17 @@ class FakeSlackClient:
 
 
 class SlackBackupDumpTests(unittest.TestCase):
+    def test_parser_defaults_include_thread_replies(self):
+        slack_backup_dump = load_slack_backup_dump()
+        original = os.environ.pop("SLACK_BACKUP_INCLUDE_THREADS", None)
+        try:
+            args = slack_backup_dump.build_parser().parse_args([])
+        finally:
+            if original is not None:
+                os.environ["SLACK_BACKUP_INCLUDE_THREADS"] = original
+
+        self.assertTrue(args.include_threads)
+
     def test_dump_slack_writes_users_channels_messages_and_thread_replies(self):
         slack_backup_dump = load_slack_backup_dump()
 
