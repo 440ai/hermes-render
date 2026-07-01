@@ -19,6 +19,35 @@ Do not reuse this instance for customers. Do not put customer CRM data, internal
 - Dashboard URL: `https://ha.440.ai`
 - Health check: `/api/status`
 
+## Slack Backup Job
+
+The Blueprint also defines a scheduled Slack archive job:
+
+- Cron service: `hermes-slack-backup`
+- Schedule: every 15 minutes
+- Database: `hermes-slack-archive`
+- Script: `scripts/slack_backup_dump.py`
+
+The job dumps accessible Slack users, channels, messages, and thread replies into normalized Postgres tables while preserving raw Slack JSON for restricted source backup. It is intentionally separate from the LLM wiki: raw Slack history stays in the database, while summaries and reviewed decisions can later be promoted into the wiki or GitHub issues.
+
+Required env:
+
+```text
+SLACK_BOT_TOKEN
+```
+
+Optional env:
+
+```text
+SLACK_BACKUP_CHANNEL_ALLOWLIST
+SLACK_BACKUP_CHANNEL_TYPES=public_channel,private_channel,mpim,im
+SLACK_BACKUP_BACKFILL_DAYS=90
+SLACK_BACKUP_LOOKBACK_DAYS=7
+SLACK_BACKUP_INCLUDE_THREADS=1
+```
+
+Leave `SLACK_BACKUP_CHANNEL_ALLOWLIST` empty to sync all channels and DM-like conversations visible to the bot token. The bot must be invited to private channels before it can read them, and Slack app scopes determine whether DMs/MPIMs are visible.
+
 The Docker image keeps the upstream Hermes s6 entrypoint. A 440 startup hook patches the seeded config with:
 
 - Render MCP server at `https://mcp.render.com/mcp`
