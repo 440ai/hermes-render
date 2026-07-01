@@ -89,6 +89,11 @@ sync_checked_in_profile() {
     cp -a "$HERMES_PROFILE_SOURCE/plugins"/. "$HERMES_HOME/plugins"/
   fi
 
+  if [[ -d "$HERMES_PROFILE_SOURCE/skills" ]]; then
+    mkdir -p "$HERMES_HOME/skills"
+    cp -a "$HERMES_PROFILE_SOURCE/skills"/. "$HERMES_HOME/skills"/
+  fi
+
   sync_managed_profile_blocks
 
   if [[ "${HERMES_OVERWRITE_CONFIG:-1}" == "1" || ! -f "$HERMES_HOME/config.yaml" ]]; then

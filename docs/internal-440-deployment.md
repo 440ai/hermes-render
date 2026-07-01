@@ -23,15 +23,15 @@ The Docker image keeps the upstream Hermes s6 entrypoint. A 440 startup hook pat
 
 - Render MCP server at `https://mcp.render.com/mcp`
 - Render skill bundles under `/opt/render-tools`
-- self-hosted OIDC dashboard auth defaults
+- allowlisted Clerk/OIDC dashboard auth defaults
 
 ## Required First Deploy Env
 
 Set these in Render before adding model/provider keys:
 
 ```text
-HERMES_DASHBOARD_OIDC_CLIENT_ID
-HERMES_DASHBOARD_OIDC_CLIENT_SECRET
+HERMES_DASHBOARD_ALLOWLISTED_OIDC_CLIENT_ID
+HERMES_DASHBOARD_ALLOWLISTED_OIDC_CLIENT_SECRET
 ```
 
 The Blueprint already sets:
@@ -42,7 +42,8 @@ HERMES_DASHBOARD_HOST=0.0.0.0
 HERMES_DASHBOARD_PORT=10000
 HERMES_DASHBOARD_PUBLIC_URL=https://ha.440.ai
 HERMES_DASHBOARD_OIDC_ISSUER=https://clerk.440.ai
-HERMES_DASHBOARD_OIDC_SCOPES=openid profile email
+HERMES_DASHBOARD_ALLOWLISTED_OIDC_SCOPES=profile email
+HERMES_DASHBOARD_ALLOWED_EMAILS=hello@kevinwalsh.co,k@440.ai,scott@440.ai,sjtousley@gmail.com
 ```
 
 The Clerk OAuth/OIDC app must allow:

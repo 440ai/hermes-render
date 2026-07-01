@@ -20,6 +20,11 @@ delegation:
   orchestrator_enabled: true
   subagent_auto_approve: false
 
+compression:
+  # The Slack concierge should not post automatic Codex context-window notices
+  # into user threads. Keep compression behavior explicit and repo-backed.
+  codex_gpt55_autoraise: false
+
 plugins:
   enabled:
     - dashboard_auth/allowlisted_oidc
@@ -71,3 +76,4 @@ display:
   # output.
   tool_progress: off
   tool_progress_command: false
+  interim_assistant_messages: false
