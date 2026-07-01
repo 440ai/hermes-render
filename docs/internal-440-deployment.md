@@ -19,9 +19,20 @@ Do not reuse this instance for customers. Do not put customer CRM data, internal
 - Dashboard URL: `https://ha.440.ai`
 - Health check: `/api/status`
 
-## Slack Backup Job
+## Slack Backup
 
-The Blueprint also defines a scheduled Slack archive job:
+The deployed `hermes-internal` container starts a supervised Slack backup loop
+alongside the gateway. It reuses the existing `SLACK_BOT_TOKEN` already set on
+`hermes-internal`, so no second copy of the token is required.
+
+Current live path:
+
+- Service: `hermes-internal`
+- Schedule: every 15 minutes by default
+- Database: `/opt/data/slack-backup.sqlite3` unless `SLACK_BACKUP_DATABASE_URL` is set
+- Script: `scripts/slack_backup_dump.py`
+
+The Blueprint also defines a future standalone scheduled Slack archive job:
 
 - Cron service: `hermes-slack-backup`
 - Schedule: every 15 minutes
@@ -30,7 +41,7 @@ The Blueprint also defines a scheduled Slack archive job:
 
 The job dumps accessible Slack users, channels, messages, and thread replies into normalized Postgres tables while preserving raw Slack JSON for restricted source backup. It is intentionally separate from the LLM wiki: raw Slack history stays in the database, while summaries and reviewed decisions can later be promoted into the wiki or GitHub issues.
 
-Required env:
+Required env on `hermes-internal`:
 
 ```text
 SLACK_BOT_TOKEN

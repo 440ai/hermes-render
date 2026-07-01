@@ -1,0 +1,2 @@
+#!/usr/bin/with-contenv bash
+exec /opt/render-tools/slack-backup-loop.sh

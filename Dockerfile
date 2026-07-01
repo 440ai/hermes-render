@@ -59,12 +59,16 @@ COPY --chown=root:root scripts/00-internal-profile.sh /etc/cont-init.d/00-intern
 COPY --chown=root:root scripts/patch-config.py /opt/render-tools/patch-config.py
 COPY --chown=root:root scripts/prepare-internal-profile.sh /opt/render-tools/prepare-internal-profile.sh
 COPY --chown=root:root scripts/slack_backup_dump.py /opt/render-tools/slack_backup_dump.py
+COPY --chown=root:root scripts/slack-backup-loop.sh /opt/render-tools/slack-backup-loop.sh
+COPY --chown=root:root scripts/slack-backup-service-run /etc/services.d/slack-backup/run
 RUN test -f /opt/hermes/plugins/dashboard_auth/allowlisted_oidc/plugin.yaml \
     && chmod 0755 /etc/cont-init.d/00-internal-profile \
         /etc/cont-init.d/016-render-tools \
         /opt/render-tools/patch-config.py \
         /opt/render-tools/prepare-internal-profile.sh \
-        /opt/render-tools/slack_backup_dump.py
+        /opt/render-tools/slack_backup_dump.py \
+        /opt/render-tools/slack-backup-loop.sh \
+        /etc/services.d/slack-backup/run
 
 # The Slack backup cron writes to Render Postgres through psycopg.
 RUN python3 -m pip install --no-cache-dir "psycopg[binary]==3.2.10"
