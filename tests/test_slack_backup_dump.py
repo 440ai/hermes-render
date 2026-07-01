@@ -88,7 +88,7 @@ class SlackBackupDumpTests(unittest.TestCase):
 
             args = types.SimpleNamespace(
                 channel_allowlist="",
-                channel_types="public_channel,private_channel",
+                channel_types="public_channel,private_channel,mpim,im",
                 full_backfill=True,
                 backfill_days=90,
                 lookback_days=7,

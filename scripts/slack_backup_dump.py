@@ -711,7 +711,10 @@ def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--database-url", default=os.environ.get("SLACK_BACKUP_DATABASE_URL") or os.environ.get("DATABASE_URL") or "sqlite:////opt/data/slack-backup.sqlite3")
     parser.add_argument("--channel-allowlist", default=os.environ.get("SLACK_BACKUP_CHANNEL_ALLOWLIST") or os.environ.get("SLACK_ALLOWED_CHANNELS") or "")
-    parser.add_argument("--channel-types", default=os.environ.get("SLACK_BACKUP_CHANNEL_TYPES", "public_channel,private_channel"))
+    parser.add_argument(
+        "--channel-types",
+        default=os.environ.get("SLACK_BACKUP_CHANNEL_TYPES", "public_channel,private_channel,mpim,im"),
+    )
     parser.add_argument("--backfill-days", type=int, default=int(os.environ.get("SLACK_BACKUP_BACKFILL_DAYS", str(DEFAULT_BACKFILL_DAYS))))
     parser.add_argument("--lookback-days", type=int, default=int(os.environ.get("SLACK_BACKUP_LOOKBACK_DAYS", str(DEFAULT_LOOKBACK_DAYS))))
     parser.add_argument("--full-backfill", action="store_true", default=parse_bool(os.environ.get("SLACK_BACKUP_FULL_BACKFILL")))

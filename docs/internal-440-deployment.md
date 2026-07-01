@@ -40,13 +40,13 @@ Optional env:
 
 ```text
 SLACK_BACKUP_CHANNEL_ALLOWLIST
-SLACK_BACKUP_CHANNEL_TYPES=public_channel,private_channel
+SLACK_BACKUP_CHANNEL_TYPES=public_channel,private_channel,mpim,im
 SLACK_BACKUP_BACKFILL_DAYS=90
 SLACK_BACKUP_LOOKBACK_DAYS=7
 SLACK_BACKUP_INCLUDE_THREADS=1
 ```
 
-Leave `SLACK_BACKUP_CHANNEL_ALLOWLIST` empty to sync all channels visible to the bot. The bot must be invited to private channels before it can read them.
+Leave `SLACK_BACKUP_CHANNEL_ALLOWLIST` empty to sync all channels and DM-like conversations visible to the bot token. The bot must be invited to private channels before it can read them, and Slack app scopes determine whether DMs/MPIMs are visible.
 
 The Docker image keeps the upstream Hermes s6 entrypoint. A 440 startup hook patches the seeded config with:
 

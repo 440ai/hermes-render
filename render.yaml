@@ -158,7 +158,7 @@ services:
       - key: SLACK_BACKUP_CHANNEL_ALLOWLIST
         sync: false
       - key: SLACK_BACKUP_CHANNEL_TYPES
-        value: public_channel,private_channel
+        value: public_channel,private_channel,mpim,im
       - key: SLACK_BACKUP_BACKFILL_DAYS
         value: "90"
       - key: SLACK_BACKUP_LOOKBACK_DAYS
