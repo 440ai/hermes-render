@@ -12,7 +12,7 @@ The 440 LLM wiki is the agent-maintained corporate memory vault.
 - Runtime workspace: `/workspace/llm-wiki`
 - GitHub repo: `440ai/llm-wiki`
 - Canonical branch: `main`
-- Human docs repo remains separate: `440ai/wiki`
+- Legacy `440ai/wiki` content was imported into `90-sources/440ai-wiki/`; use `440ai/llm-wiki` going forward.
 
 If `/workspace/llm-wiki` is missing, stale, or inaccessible, escalate to Agent Ops and file/update an issue in `440ai/hermes-render`.
 
