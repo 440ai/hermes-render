@@ -12,21 +12,10 @@
 # operator choice, not something the agent does as an automatic fallback.
 #
 # Pin the upstream tag here. Bump and redeploy to upgrade Hermes.
-ARG HERMES_IMAGE=docker.io/nousresearch/hermes-agent:v2026.5.7
+ARG HERMES_IMAGE=docker.io/nousresearch/hermes-agent:v2026.6.19
 FROM ${HERMES_IMAGE}
 
-# Workarounds for upstream issues that prevent the dashboard's Chat tab
-# from connecting on hosted deploys. Baked into the image so the runtime
-# command stays simple. See render.yaml comments + the README for context.
-#   - chown: dashboard runs as `hermes` but ui-tui/ + node_modules/ ship root-owned
-#   - touch ink-bundle.js: short-circuits _hermes_ink_bundle_stale()
-#   - touch entry.js: bumps mtime above source .ts files so _tui_build_needed() returns False
 USER root
-RUN chown -R hermes:hermes /opt/hermes/ui-tui /opt/hermes/node_modules \
- && mkdir -p /opt/hermes/ui-tui/packages/hermes-ink/dist /opt/hermes/ui-tui/dist \
- && touch /opt/hermes/ui-tui/packages/hermes-ink/dist/ink-bundle.js \
-          /opt/hermes/ui-tui/dist/entry.js \
- && chown -R hermes:hermes /opt/hermes/ui-tui
 
 # Pull the official Render skill bundle from github.com/render-oss/skills
 # at a pinned commit. Mounted via skills.external_dirs at boot, so the
@@ -55,18 +44,15 @@ RUN set -eu; \
 COPY --chown=hermes:hermes skills/ /opt/render-tools/skills-local/
 
 # Boot-time wrapper: patches /opt/data/config.yaml, then hands off to
-# the upstream entrypoint chain (tini → docker/entrypoint.sh).
-COPY --chown=root:root scripts/bootstrap.sh /opt/render-tools/bootstrap.sh
+# the upstream Hermes s6 startup path. This runs after the upstream
+# config seeding hook and before dashboard/gateway services start.
+COPY --chown=root:root scripts/bootstrap.sh /etc/cont-init.d/016-render-tools
 COPY --chown=root:root scripts/patch-config.py /opt/render-tools/patch-config.py
-RUN chmod 0755 /opt/render-tools/bootstrap.sh /opt/render-tools/patch-config.py
+RUN chmod 0755 /etc/cont-init.d/016-render-tools /opt/render-tools/patch-config.py
 
 # Pre-create the dir the patcher writes to so chown works cleanly on
 # first boot. The mounted disk replaces this empty dir at runtime;
 # baking it just keeps the image self-contained for any non-disk use.
 RUN install -d -o hermes -g hermes -m 0755 /opt/data
 
-# Stay as root so the bootstrap can chown the mounted /opt/data on first
-# boot, then `gosu hermes` for the config patch, then exec the upstream
-# entrypoint (which also runs as root and does its own gosu drop).
-ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/opt/render-tools/bootstrap.sh"]
 CMD ["gateway", "run"]

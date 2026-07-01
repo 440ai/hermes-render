@@ -1,16 +1,16 @@
 # Hermes Agent on Render, pre-baked with Render tools
 
-Deploy [Hermes Agent](https://github.com/NousResearch/hermes-agent) (the self-improving AI agent from Nous Research) on Render as a single Docker web service, **already wired up to your Render account**. The image extends the upstream Hermes container with:
+Deploy [Hermes Agent](https://github.com/NousResearch/hermes-agent) (the self-improving AI agent from Nous Research) on Render as a single Docker web service, **already wired up to your Render account** and configured for the internal 440.ai Clerk-protected dashboard.
 
 - The [Render MCP server](https://render.com/docs/mcp-server) registered in `config.yaml` at boot, so MCP tools appear as `mcp_render_list_services`, `mcp_render_get_metrics`, `mcp_render_list_logs`, etc. The agent gets the full MCP tool catalog that your API key can use.
 - The official [render-oss/skills](https://github.com/render-oss/skills) bundle (22 Render skills) pinned at a commit and exposed via `skills.external_dirs`.
 - A `render-on-hermes` overlay skill that tells the agent the MCP server is already wired up, that the CLI is not installed, and how to behave when an upstream skill expects either.
 
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy-template/api/github/start?template_repo=hermes-render)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy-template/api/github/start?template_repo=440ai/hermes-render)
 
 The Hermes release and the skills commit are both pinned in the `Dockerfile` for reproducible deploys. All Hermes state lives on a persistent disk so upgrades stay non-destructive, and the dashboard at the service URL is the primary setup surface.
 
-> **Use at your own risk:** The agent can use every Render MCP tool allowed by `RENDER_MCP_API_KEY`, including tools that mutate resources. Lock down dashboard access and use the least-privileged Render account you can.
+> **Use at your own risk:** The agent can use every Render MCP tool allowed by `RENDER_MCP_API_KEY`, including tools that mutate resources. Keep dashboard auth mandatory and use the least-privileged Render account you can.
 
 ## Architecture
 
@@ -45,7 +45,7 @@ The Hermes release and the skills commit are both pinned in the `Dockerfile` for
                             └──────────────────────────────────────────────┘
 ```
 
-A single container runs both Hermes processes. The dashboard ([upstream docs](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/web-dashboard.md)) is a side-process that the upstream entrypoint backgrounds whenever `HERMES_DASHBOARD=1` is set; the gateway is the foreground PID. They share `/opt/data` and a PID namespace, which is required for the dashboard's gateway-liveness checks.
+A single container runs both Hermes processes. The dashboard ([upstream docs](https://github.com/NousResearch/hermes-agent/blob/main/website/docs/user-guide/features/web-dashboard.md)) is supervised by the upstream s6 entrypoint whenever `HERMES_DASHBOARD=1` is set; the gateway is the foreground process. They share `/opt/data` and a PID namespace, which is required for the dashboard's gateway-liveness checks.
 
 The disk holds everything that should survive a redeploy: API keys (`.env`), config (`config.yaml`), the FTS5 session database, installed skills, Honcho user models, agent memories, cron job definitions, and logs. The `render-oss/skills` bundle and the bootstrap that registers the Render MCP server are baked into the image (versioned with each deploy), not the disk.
 
@@ -58,7 +58,7 @@ The `Dockerfile` adds two layers on top of `nousresearch/hermes-agent`:
 | Render skill bundle | `/opt/render-tools/skills-upstream/` | [render-oss/skills](https://github.com/render-oss/skills) tarball | `RENDER_SKILLS_REF` ARG (commit SHA) |
 | Hermes-on-Render overlay | `/opt/render-tools/skills-local/` | [`./skills/`](./skills) in this repo | This repo's commits |
 
-On every boot, [`scripts/bootstrap.sh`](scripts/bootstrap.sh) runs an idempotent patcher ([`scripts/patch-config.py`](scripts/patch-config.py)) that adds two entries to `/opt/data/config.yaml` if they're missing:
+On every boot, [`scripts/bootstrap.sh`](scripts/bootstrap.sh) runs as an s6 startup hook and invokes an idempotent patcher ([`scripts/patch-config.py`](scripts/patch-config.py)) that adds three entries to `/opt/data/config.yaml` if they're missing:
 
 ```yaml
 mcp_servers:
@@ -71,6 +71,14 @@ skills:
   external_dirs:
     - /opt/render-tools/skills-local
     - /opt/render-tools/skills-upstream
+
+dashboard:
+  oauth:
+    provider: self-hosted
+    self_hosted:
+      issuer: "${HERMES_DASHBOARD_OIDC_ISSUER}"
+      client_id: "${HERMES_DASHBOARD_OIDC_CLIENT_ID}"
+      scopes: "${HERMES_DASHBOARD_OIDC_SCOPES}"
 ```
 
 The patcher is **insert-only**: it never overwrites edits you make from the dashboard. The `${RENDER_MCP_API_KEY}` placeholder is resolved lazily at gateway startup, so you can rotate the key from Render's **Environment** tab without rebuilding the image — just restart the service.
@@ -114,19 +122,47 @@ You don't need any optional keys to deploy. You can fill them in via the Render 
 2. In the Render Dashboard, go to **Blueprints** → **New Blueprint Instance** and point at your fork.
 3. Confirm and apply.
 
-### Protect the URL before configuring
+### Configure Clerk before first use
 
-The Hermes dashboard has no built-in authentication. Anyone who knows the service URL can read and write your API keys. Before you visit the dashboard for the first time, choose how you want to protect it:
+This fork pins Hermes to a release with dashboard auth support. The Blueprint binds the dashboard to `0.0.0.0` without `HERMES_DASHBOARD_INSECURE`, so the dashboard should fail closed unless the OIDC provider is configured.
 
-- Put the service behind an auth gateway that verifies a bearer token, OAuth session, or trusted identity provider.
-- Keep the dashboard reachable only through a private network path, such as Tailscale.
-- Accept the risk for a demo, use low-privilege keys, and delete the service when you're done.
+Before opening the dashboard:
 
-Read the **Security** section before you paste production API keys.
+1. In Clerk, create or reuse the OAuth/OIDC application for Hermes.
+2. Add the callback URL:
+
+   ```text
+   https://ha.440.ai/auth/callback
+   ```
+
+3. Put the client ID and client secret into Render as:
+
+   ```text
+   HERMES_DASHBOARD_OIDC_CLIENT_ID
+   HERMES_DASHBOARD_OIDC_CLIENT_SECRET
+   ```
+
+4. Confirm the Blueprint env vars still point at the 440 Clerk issuer:
+
+   ```text
+   HERMES_DASHBOARD_PUBLIC_URL=https://ha.440.ai
+   HERMES_DASHBOARD_OIDC_ISSUER=https://clerk.440.ai
+   HERMES_DASHBOARD_OIDC_SCOPES=openid profile email
+   ```
+
+5. Verify auth before adding provider, Slack, GitHub, or Render keys:
+
+   ```bash
+   curl -s https://ha.440.ai/api/status | jq '.auth_required, .auth_providers'
+   ```
+
+   Expected: `auth_required` is `true` and the auth provider list is not empty.
+
+Do not add production keys while `auth_required` is `false`.
 
 ## Post-deploy setup
 
-Once the service is healthy (the **Events** tab shows "Deploy live"), open the URL Render assigned (it ends in `.onrender.com`). You'll see the Hermes dashboard.
+Once the service is healthy (the **Events** tab shows "Deploy live") and `https://ha.440.ai/api/status` reports that auth is required, open `https://ha.440.ai`. You'll see the Hermes dashboard after Clerk sign-in.
 
 The Blueprint deliberately keeps the env-var surface tiny. All provider keys, tool keys, and chat platform tokens are set from the dashboard, not from `render.yaml`. The dashboard writes everything to `/opt/data/.env`, which lives on the persistent disk and survives redeploys.
 
@@ -138,7 +174,7 @@ Walk through these tabs in order:
    - `OPENAI_API_KEY`, `GOOGLE_API_KEY`, `HF_TOKEN`, etc. for the others
 2. **Config**. Set the `model` field at the top of the list. The upstream image's default is `anthropic/claude-opus-4.6`, which works as soon as you've set `ANTHROPIC_API_KEY`. Otherwise pick a model your provider supports (for example, `anthropic/claude-sonnet-4.6` for Anthropic, or any OpenRouter model ID like `openai/gpt-5.5`).
 3. **Status**. Confirm the gateway is running and the model is reachable. The "Connected platforms" list will be empty until you add a chat platform.
-4. **API Keys** again, optionally. If you want a chat gateway, add the matching tokens: `TELEGRAM_BOT_TOKEN`, `DISCORD_BOT_TOKEN`, `SLACK_BOT_TOKEN` + `SLACK_APP_TOKEN`, etc. Use the **Restart gateway** button on the Status tab so the new tokens are picked up.
+4. **API Keys** again, optionally. For the internal Slack gateway, add the matching tokens if you did not set them from Render env: `SLACK_BOT_TOKEN` + `SLACK_APP_TOKEN`, plus `SLACK_ALLOWED_USERS` and `SLACK_ALLOWED_CHANNELS`. Use the **Restart gateway** button on the Status tab so the new tokens are picked up.
 
 If you'd rather set keys from the Render Dashboard's **Environment** tab (handy for CI or secrets-manager workflows), that path also works: Render env vars override `/opt/data/.env` at process start. Pick one path and stick with it to avoid drift. **The two `RENDER_*` variables are the exception** — set them from the Render **Environment** tab (not the Hermes dashboard's API Keys tab), since `config.yaml` reads `${RENDER_MCP_API_KEY}` from the gateway process environment.
 
@@ -160,7 +196,7 @@ The Blueprint generates a `HERMES_GATEWAY_TOKEN` for you. Today, upstream Hermes
 
 ## Chatting with the agent
 
-The simplest way to talk to your deployed Hermes is the dashboard's **Chat** tab. The Blueprint sets `HERMES_DASHBOARD_TUI=1`, which makes the upstream dashboard expose the full TUI in the browser over a server-side PTY plus xterm.js. Slash commands, model picker, tool-call cards, streaming, sessions: everything works the same as a local terminal.
+The simplest way to talk to your deployed Hermes is the dashboard's **Chat** tab. The current upstream dashboard exposes the full TUI in the browser over a server-side PTY plus xterm.js. Slash commands, model picker, tool-call cards, streaming, sessions: everything works the same as a local terminal.
 
 If you'd rather stay on the command line, two paths work, both because the in-container `hermes` is the same binary as the local CLI:
 
@@ -202,7 +238,7 @@ LLM costs are separate and depend entirely on your provider and usage. OpenRoute
 Both pinned versions live in the [`Dockerfile`](Dockerfile) as build args:
 
 ```dockerfile
-ARG HERMES_IMAGE=docker.io/nousresearch/hermes-agent:v2026.5.7
+ARG HERMES_IMAGE=docker.io/nousresearch/hermes-agent:v2026.6.19
 ARG RENDER_SKILLS_REF=1b8496570748203351f628b2ae738805ac2c23d5
 ```
 
@@ -212,7 +248,7 @@ Bump either, commit, and push. Render won't auto-deploy (the Blueprint sets `aut
 render deploys create <service-id>
 ```
 
-Your `/opt/data` disk is untouched across image upgrades. The upstream entrypoint runs a manifest-based `skills_sync.py` on each boot, which preserves edits to bundled Hermes skills. The `render-oss/skills` bundle and the `render-on-hermes` overlay live under `/opt/render-tools/` (read-only image layer), so they're replaced wholesale on every new build and never touch the disk.
+Your `/opt/data` disk is untouched across image upgrades. The upstream startup hook runs a manifest-based `skills_sync.py` on each boot, which preserves edits to bundled Hermes skills. The `render-oss/skills` bundle and the `render-on-hermes` overlay live under `/opt/render-tools/` (read-only image layer), so they're replaced wholesale on every new build and never touch the disk.
 
 Hermes ships fast: roughly weekly tagged releases, each with around 180 commits. Check [the upstream releases page](https://github.com/NousResearch/hermes-agent/releases) before bumping `HERMES_IMAGE`. The [skills repo's commit log](https://github.com/render-oss/skills/commits/main) is the source of truth for `RENDER_SKILLS_REF`.
 
@@ -253,11 +289,11 @@ Check the **Events** tab for the deploy that failed, then the **Logs** tab aroun
 | `Refusing to start: binding to 0.0.0.0 requires API_SERVER_KEY` | You set `API_SERVER_ENABLED=true` and `API_SERVER_HOST=0.0.0.0` without an `API_SERVER_KEY`. Set the key or flip back to `127.0.0.1`. |
 | Health check fails on `/api/status`                  | `HERMES_DASHBOARD` is unset or the dashboard crashed. Check `[dashboard]` lines for a Python traceback. |
 | Container OOM-killed                                 | Bump plan to `pro`. Playwright/Chromium is the usual culprit.                 |
-| `Permission denied` on `/opt/data/...`               | The disk was attached after a deploy that ran as a different UID. Restart the service; the entrypoint chowns `/opt/data` on boot when run as root. |
+| Dashboard refuses to start on `0.0.0.0`              | The OIDC provider is missing or invalid. Set the Clerk env vars before adding provider/API keys. |
+| `auth_required: false` from `/api/status`            | The dashboard is not protected. Do not add secrets; verify `HERMES_DASHBOARD_INSECURE` is unset and OIDC env vars are present. |
+| `Permission denied` on `/opt/data/...`               | The disk was attached after a deploy that ran as a different UID. Restart the service; the upstream startup hook repairs Hermes-owned state on boot when run as root. |
 | `Warning: Input is not a terminal (fd=0)` then `Goodbye!` when running `hermes` | Render's browser shell pipes stdin instead of allocating a PTY. Chat from the dashboard's **Chat** tab, or use `hermes chat -q "..."`, or `render ssh <service-id>` from a local terminal. |
-| `Goodbye! ⚕` in the deploy logs followed by 502s on the URL | The Dockerfile's `ENTRYPOINT` got bypassed somehow (forked the template and overrode it, or set a `dockerCommand` in `render.yaml` without the full upstream chain). The default `ENTRYPOINT ["/usr/bin/tini", "-g", "--", "/opt/render-tools/bootstrap.sh"]` + `CMD ["gateway", "run"]` must stay intact. |
-| `Refusing to run the Hermes gateway as root` | Same root cause as above. Restore the Dockerfile's `ENTRYPOINT`/`CMD` so the upstream `entrypoint.sh` can do its `gosu` drop. |
-| Dashboard **Chat** tab shows "Chat unavailable: 1" or hangs / 500s on `/api/pty` | Two upstream bugs combined to break the Chat tab on hosted deploys: (1) [#20500](https://github.com/NousResearch/hermes-agent/issues/20500): `/opt/hermes/ui-tui/` ships root-owned but the dashboard runs as the `hermes` user, so the runtime esbuild rebuild fails with `EACCES`. (2) Separate filename mismatch: `_hermes_ink_bundle_stale()` in `hermes_cli/main.py` looks for `packages/hermes-ink/dist/ink-bundle.js`, but `@hermes/ink`'s build script (`esbuild src/entry-exports.ts --outdir=dist`) only produces `entry-exports.js`. The bundle the staleness check expects is never created, so every `/api/pty` connect runs a 28-second `npm run build` that exceeds Render's WebSocket-upgrade timeout. The Dockerfile chowns the directories AND `touch`es the two expected paths at build time so both checks short-circuit. If you've forked the template and removed those lines, restore them. |
+| Container exits immediately after deploy             | The upstream s6 entrypoint was overridden. Do not set `dockerCommand` or replace `ENTRYPOINT`; keep `CMD ["gateway", "run"]`. |
 | `mcp_render_*` tools missing from Hermes' tool list | The gateway started without `RENDER_MCP_API_KEY`. Add it under the service's **Environment** tab and click **Restart gateway** from the dashboard's Status tab. |
 | Agent says it tried to run `render <something>` and got `command not found` | Working as designed — the Render CLI is not installed in this image (see **Security: agent capabilities**). Most CLI capabilities have an MCP equivalent the agent should use instead; the rest (live log streaming, `render psql`, SSH) the user runs from their own machine. |
 | `[render-tools] config patch failed; continuing` in the boot logs | Non-fatal. The agent still runs; you just won't see the Render MCP server until you fix it. Usually means `/opt/data/config.yaml` isn't valid YAML — fix it from the dashboard or wipe it (see "Forcing a clean rebuild"). |
@@ -273,7 +309,7 @@ If the Hermes data directory gets into a bad state (corrupt session DB, partial 
 
 1. SSH in.
 2. `mv /opt/data /opt/data.bak && exit`.
-3. Restart the service from the Render Dashboard. The entrypoint recreates the directory tree and reseeds defaults.
+3. Restart the service from the Render Dashboard. The upstream startup hooks recreate the directory tree and reseed defaults.
 
 Or restore the most recent automatic disk snapshot from the **Disks** page.
 
@@ -281,10 +317,10 @@ Or restore the most recent automatic disk snapshot from the **Disks** page.
 
 There are two distinct security surfaces in this template, and they compound:
 
-1. **Dashboard auth.** Hermes' web dashboard has no authentication. Anyone who reaches the URL can read your provider keys, change configuration, and chat with the agent.
+1. **Dashboard auth.** The dashboard is bound to the public Render service URL and must require Clerk/OIDC authentication. Anyone who reaches an unprotected dashboard can read provider keys, change configuration, and chat with the agent.
 2. **Agent capabilities.** The agent has access to a Render workspace API key via MCP. Depending on that key's role, it can restart services, change env vars, trigger deploys, and run SQL against Render Postgres.
 
-The two compose into a worst case: an unauthenticated user reaches the dashboard, chats with the agent, and asks it to "delete all services in this workspace." This template registers the full Render MCP tool catalog and **does not install the `render` CLI**. The dashboard lock is on you.
+The two compose into a worst case: an unauthenticated user reaches the dashboard, chats with the agent, and asks it to "delete all services in this workspace." This template registers the full Render MCP tool catalog and **does not install the `render` CLI**. Treat `auth_required: true` as a launch gate, not a nice-to-have.
 
 ### Agent capabilities
 

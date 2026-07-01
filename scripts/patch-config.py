@@ -20,6 +20,10 @@ Adds two things the first time it runs against a given config.yaml:
        - /opt/render-tools/skills-upstream (pinned render-oss/skills)
      The local overlay is listed first so its skill names win on collision.
 
+  3. dashboard.oauth -- selects Hermes' self-hosted OIDC dashboard auth
+     provider by default. Runtime issuer/client/scopes are still supplied
+     through Render environment variables so secrets stay out of config.yaml.
+
 The patcher is INSERT-only by design. If either key already exists
 (even pointing somewhere different), it leaves it alone. This means:
   - Re-running the patcher on every boot is safe.
@@ -44,6 +48,14 @@ RENDER_SKILL_DIRS = (
 )
 RENDER_MCP_URL = "https://mcp.render.com/mcp"
 RENDER_MCP_AUTH = "Bearer ${RENDER_MCP_API_KEY}"
+DEFAULT_DASHBOARD_OAUTH = {
+    "provider": "self-hosted",
+    "self_hosted": {
+        "issuer": "${HERMES_DASHBOARD_OIDC_ISSUER}",
+        "client_id": "${HERMES_DASHBOARD_OIDC_CLIENT_ID}",
+        "scopes": "${HERMES_DASHBOARD_OIDC_SCOPES}",
+    },
+}
 
 def load_config(path: Path) -> dict:
     if not path.exists():
@@ -121,6 +133,37 @@ def ensure_external_skill_dirs(config: dict) -> list[str]:
     return added
 
 
+def ensure_dashboard_oauth(config: dict) -> bool:
+    """Insert missing dashboard OAuth defaults without overwriting user choices."""
+    dashboard = config.setdefault("dashboard", {})
+    if not isinstance(dashboard, dict):
+        print(
+            "[render-tools] dashboard is not a mapping; skipping dashboard auth defaults",
+            file=sys.stderr,
+        )
+        return False
+
+    oauth = dashboard.get("oauth")
+    if oauth is None:
+        oauth = {}
+        dashboard["oauth"] = oauth
+    elif not isinstance(oauth, dict):
+        print(
+            "[render-tools] dashboard.oauth is not a mapping; skipping dashboard auth defaults",
+            file=sys.stderr,
+        )
+        return False
+
+    changed = False
+    if "provider" not in oauth:
+        oauth["provider"] = DEFAULT_DASHBOARD_OAUTH["provider"]
+        changed = True
+    if "self_hosted" not in oauth:
+        oauth["self_hosted"] = DEFAULT_DASHBOARD_OAUTH["self_hosted"].copy()
+        changed = True
+    return changed
+
+
 def save_config(path: Path, config: dict) -> None:
     text = yaml.safe_dump(
         config,
@@ -142,16 +185,19 @@ def main() -> int:
     config = load_config(path)
     changed_mcp = ensure_render_mcp(config)
     added_dirs = ensure_external_skill_dirs(config)
-    if changed_mcp or added_dirs:
+    changed_dashboard_oauth = ensure_dashboard_oauth(config)
+    if changed_mcp or added_dirs or changed_dashboard_oauth:
         save_config(path, config)
         parts = []
         if changed_mcp:
             parts.append("mcp_servers.render")
         for dir_path in added_dirs:
             parts.append(f"skills.external_dirs += {dir_path}")
+        if changed_dashboard_oauth:
+            parts.append("dashboard.oauth")
         print(f"[render-tools] patched {path}: {', '.join(parts)}")
     else:
-        print(f"[render-tools] {path} already has render MCP + skill dirs; nothing to do")
+        print(f"[render-tools] {path} already has render MCP, skill dirs, and dashboard auth; nothing to do")
     return 0
 
 
