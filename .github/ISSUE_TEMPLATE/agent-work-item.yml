@@ -1,0 +1,81 @@
+name: Agent work item
+description: Standard work item for Hermes/Codex/Claude Code coordinated work.
+title: "[agent-ops] "
+labels:
+  - work-mechanics
+body:
+  - type: dropdown
+    id: mission
+    attributes:
+      label: Mission
+      options:
+        - Agent Ops
+        - Dev Ops
+        - Product
+        - GTM
+        - Executive
+    validations:
+      required: true
+  - type: dropdown
+    id: owner-profile
+    attributes:
+      label: Owner/Profile
+      options:
+        - executive
+        - agent-ops
+        - dev-ops
+        - product
+        - gtm
+        - unassigned
+    validations:
+      required: true
+  - type: textarea
+    id: desired-outcome
+    attributes:
+      label: Desired outcome
+      description: What should be true when this is complete.
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: What is in scope for this work slice.
+    validations:
+      required: true
+  - type: textarea
+    id: non-goals
+    attributes:
+      label: Non-goals
+      description: What should not be changed or decided in this slice.
+    validations:
+      required: true
+  - type: textarea
+    id: source-links
+    attributes:
+      label: Source links
+      description: Repo, PR, issue, Slack permalink, deploy, logs, meeting note, runbook, or browser source.
+    validations:
+      required: false
+  - type: textarea
+    id: secret-boundary
+    attributes:
+      label: Secret boundary
+      description: Secrets/customer raw data that must not be requested, stored, printed, or committed.
+      value: Do not paste raw secrets, passwords, 2FA codes, payment data, or unrestricted customer data. Use managed auth/secret-store paths.
+    validations:
+      required: true
+  - type: textarea
+    id: verification-plan
+    attributes:
+      label: Verification plan
+      description: Commands, checks, tests, screenshots, URLs, or review steps that prove completion.
+    validations:
+      required: true
+  - type: textarea
+    id: done-criteria
+    attributes:
+      label: Done criteria
+      description: Evidence and cleanup required before removing the active status label.
+    validations:
+      required: true

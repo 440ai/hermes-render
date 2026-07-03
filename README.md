@@ -194,6 +194,26 @@ Before you ask the agent to mutate Render resources, read the **Security: agent 
 
 The Blueprint generates a `HERMES_GATEWAY_TOKEN` for you. Today, upstream Hermes doesn't read this variable directly at runtime: it's a placeholder for the OpenAI-compatible API server's bearer key. If you opt into the API server (set `API_SERVER_ENABLED=true` from the dashboard's **API Keys** tab, then paste this token into `API_SERVER_KEY`), external HTTP clients can authenticate against `/v1/chat/completions` using `Authorization: Bearer <that value>`.
 
+## Agent work enforcement
+
+440.ai agent work is coordinated through GitHub Issues and the org Project
+[`440 Mission Control`](https://github.com/orgs/440ai/projects/3), not through
+repo-local task boards. The portable work contract for Hermes, Codex, and
+Claude Code lives in [`agent-work/`](agent-work/):
+
+- [`agent-work/agent-contract.md`](agent-work/agent-contract.md) defines the
+  shared source-of-truth, blocker, permission, verification, and closeout rules.
+- [`agent-work/templates/`](agent-work/templates/) contains comment templates for
+  starting work, reporting blockers, requesting permission/tooling, filing
+  root-cause bugs, and handoffs.
+- [`scripts/agent_worker_contract.py`](scripts/agent_worker_contract.py) renders
+  bounded worker prompts and performs preflight/closeout checks.
+
+Every non-trivial Hermes/Codex/Claude worker should start from a GitHub issue,
+respect the `status: active` lock, and return verifiable evidence. Repeated
+permission, tooling, workflow, documentation, or testing failures should be
+filed as bugs with a reproduction path and regression/verification check.
+
 ## Chatting with the agent
 
 The simplest way to talk to your deployed Hermes is the dashboard's **Chat** tab. The current upstream dashboard exposes the full TUI in the browser over a server-side PTY plus xterm.js. Slash commands, model picker, tool-call cards, streaming, sessions: everything works the same as a local terminal.
