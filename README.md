@@ -178,6 +178,34 @@ Walk through these tabs in order:
 
 If you'd rather set keys from the Render Dashboard's **Environment** tab (handy for CI or secrets-manager workflows), that path also works: Render env vars override `/opt/data/.env` at process start. Pick one path and stick with it to avoid drift. **The two `RENDER_*` variables are the exception** — set them from the Render **Environment** tab (not the Hermes dashboard's API Keys tab), since `config.yaml` reads `${RENDER_MCP_API_KEY}` from the gateway process environment.
 
+### Google Meet transcription
+
+The internal profile enables Hermes' bundled `google_meet` plugin. The image
+installs the plugin's pinned Python Playwright dependency and matching Chromium
+browser during the build, so the immutable Render container is ready for the
+plugin without downloading browser binaries at runtime.
+
+The initial operating mode is deliberately narrow:
+
+- Join only an explicit `https://meet.google.com/...` URL supplied by an
+  authorized user.
+- Default to guest, listen-only transcription mode (`--mode transcribe`).
+- Do not scan calendars, dial meetings automatically, or infer a Meet URL.
+- Do not enable realtime speaking mode unless a user explicitly requests it.
+- Confirm participant consent before joining or transcribing a real meeting.
+
+Verify the image without joining a meeting:
+
+```bash
+/opt/hermes/.venv/bin/hermes plugins list
+/opt/hermes/.venv/bin/hermes meet setup
+```
+
+Google authentication is optional for meetings that allow guest admission. If
+an authenticated identity is required, run `hermes meet auth` interactively in
+the intended runtime or configure an approved remote Meet node. Never commit
+the generated browser session state, cookies, OAuth tokens, or credentials.
+
 ### Verify the Render tools are wired up
 
 From the dashboard's **Chat** tab, ask Hermes to verify the tools:

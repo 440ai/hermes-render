@@ -28,6 +28,7 @@ compression:
 plugins:
   enabled:
     - dashboard_auth/allowlisted_oidc
+    - google_meet
 
 terminal:
   backend: local
