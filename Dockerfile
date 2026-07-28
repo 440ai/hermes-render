@@ -78,6 +78,15 @@ RUN if /opt/hermes/.venv/bin/python -m ensurepip --upgrade; then \
       echo "psycopg not installed; SLACK_BACKUP_DATABASE_URL requires a Postgres-capable image"; \
     fi
 
+# The bundled google_meet plugin runs Chromium through Python Playwright.
+# The upstream image includes a Node-managed headless browser for its browser
+# tool, but not the Python package/browser pairing required by `hermes meet`.
+# Keep the package pinned and install its matching Chromium at image build time
+# so the immutable Render runtime never has to modify /opt/hermes.
+RUN /opt/hermes/.venv/bin/python -m ensurepip --upgrade \
+    && /opt/hermes/.venv/bin/python -m pip install --no-cache-dir "playwright==1.61.0" \
+    && /opt/hermes/.venv/bin/python -m playwright install chromium
+
 # Pre-create the dir the patcher writes to so chown works cleanly on
 # first boot. The mounted disk replaces this empty dir at runtime;
 # baking it just keeps the image self-contained for any non-disk use.
